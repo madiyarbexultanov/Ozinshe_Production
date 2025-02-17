@@ -1,0 +1,142 @@
+basePath: /
+definitions:
+  handlers.SignInRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  handlers.SignUpRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      passwordCheck:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    - passwordCheck
+    type: object
+  models.ApiError:
+    properties:
+      error:
+        type: string
+    type: object
+host: localhost:8081
+info:
+  contact:
+    email: bexultanovmadiyar@gmail.com
+    name: Madiyar Bexultanov
+    url: https://www.linkedin.com/in/madiyar-bexultanov-b21902258/
+  description: Personal online platform providing information about media content
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Ozinshe Production
+  version: "1.0"
+paths:
+  /auth/signIn:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user by verifying the email and password, and returns
+        a JWT token
+      parameters:
+      - description: User sign-in request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SignInRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: JWT token successfully generated
+          schema:
+            properties:
+              token:
+                type: string
+            type: object
+        "400":
+          description: Invalid payload
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "401":
+          description: 'Invalid credentials: wrong email or password'
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: 'Internal server error: failed to generate JWT token'
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: User Sign In
+      tags:
+      - auth
+  /auth/signOut:
+    post:
+      consumes:
+      - application/json
+      description: Invalidates the user's current session (requires a valid JWT token)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Authorization header required
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      security:
+      - Bearer: []
+      summary: User Sign Out
+      tags:
+      - auth
+  /auth/signUp:
+    post:
+      consumes:
+      - application/json
+      description: Registers a new user by providing an email, password, and password
+        confirmation
+      parameters:
+      - description: User registration request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SignUpRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User successfully created
+          schema:
+            properties:
+              id:
+                type: integer
+            type: object
+        "400":
+          description: 'Validation error: invalid email, password mismatch, or weak
+            password'
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: 'Server error: failed to hash password or create user'
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: User Registration
+      tags:
+      - auth
+securityDefinitions:
+  Bearer:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
