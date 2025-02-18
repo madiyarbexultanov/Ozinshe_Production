@@ -2,12 +2,14 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"ozinshe_production/config"
+	"ozinshe_production/docs"
 	"ozinshe_production/handlers"
 	"ozinshe_production/logger"
 	"ozinshe_production/middlewares"
 	"ozinshe_production/repositories"
-    "ozinshe_production/docs"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -19,7 +21,6 @@ import (
 	swaggerfiles "github.com/swaggo/files"
 	swagger "github.com/swaggo/gin-swagger"
 )
-
 
 // @title           Ozinshe Production
 // @version         1.0
@@ -46,82 +47,89 @@ import (
 func main() {
 	r := gin.New()
 
-    logger := logger.GetLogger()
+	logger := logger.GetLogger()
 
-    r.Use(
-        ginzap.Ginzap(logger, time.RFC3339, true),
-        ginzap.RecoveryWithZap(logger, true),
-    )
+	r.Use(
+		ginzap.Ginzap(logger, time.RFC3339, true),
+		ginzap.RecoveryWithZap(logger, true),
+	)
 
-    corsConfig := cors.Config{
-        AllowAllOrigins:    true,
-        AllowHeaders:       []string{"*"},
-        AllowMethods:       []string{"*"},
-    }
+	corsConfig := cors.Config{
+		AllowAllOrigins: true,
+		AllowHeaders:    []string{"*"},
+		AllowMethods:    []string{"*"},
+	}
 
-    r.Use(cors.New(corsConfig))
-    gin.SetMode(gin.ReleaseMode)
+	r.Use(cors.New(corsConfig))
+	gin.SetMode(gin.ReleaseMode)
 
 	err := loadConfig()
 	if err != nil {
 		panic(err)
 	}
 
-    conn, err := connectToDb()
-    if err!=nil {
-        panic(err)
-    }
+	conn, err := connectToDb()
+	if err != nil {
+		panic(err)
+	}
 
 	usersRepository := repositories.NewUsersRepository(conn)
 
-    // usersHandler := handlers.NewUsersHandler(usersRepository)
-    authHandler := handlers.NewAuthHandlers(usersRepository)
+	// usersHandler := handlers.NewUsersHandler(usersRepository)
+	authHandler := handlers.NewAuthHandlers(usersRepository)
+	googleAuthHandler := handlers.NewAuthHandlers(usersRepository)
 
-    authorized := r.Group("")
-    authorized.Use(middlewares.AuthMiddleware)
-    authorized.POST("/auth/signOut", authHandler.SignOut)
+	authorized := r.Group("")
+	authorized.Use(middlewares.AuthMiddleware)
+	authorized.POST("/auth/signOut", authHandler.SignOut)
 
+	unauthorized := r.Group("")
+	unauthorized.POST("/auth/signUp", authHandler.SignUp)
+	unauthorized.POST("/auth/signIn", authHandler.SignIn)
 
-    unauthorized := r.Group("")
-    unauthorized.POST("/auth/signUp", authHandler.SignUp)
-    unauthorized.POST("/auth/signIn", authHandler.SignIn)
+	unauthorized.GET("/auth/google", googleAuthHandler.GoogleLogin)
+	unauthorized.GET("/auth/google/callback", authHandler.GoogleCallback)
 
-    docs.SwaggerInfo.BasePath = "/"
-    unauthorized.GET("/swagger/*any", swagger.WrapHandler(swaggerfiles.Handler))
-    
+	docs.SwaggerInfo.BasePath = "/"
+	unauthorized.GET("/swagger/*any", swagger.WrapHandler(swaggerfiles.Handler))
 
-    logger.Info("Application starting...")
+	logger.Info("Application starting...")
+	fmt.Println("Google Client ID:", os.Getenv("GOOGLE_CLIENT_ID"))
+	fmt.Println("Google Client Secret:", os.Getenv("GOOGLE_CLIENT_SECRET"))
+	fmt.Println("Google Redirect URL:", os.Getenv("GOOGLE_REDIRECT_URL"))
 
 	r.Run(config.Config.AppHost)
 }
 
 func loadConfig() error {
-    viper.SetConfigFile(".env")
-    
-    err := viper.ReadInConfig()
-    if err != nil {
-        return err
-    }
+	viper.SetConfigFile(".env")
+    viper.AutomaticEnv()
 
-    var mapConfig config.MapConfig
-    err = viper.Unmarshal(&mapConfig)
-    if err != nil {
-        return err
-    }
+	err := viper.ReadInConfig()
+	if err != nil {
+		return err
+	}
 
-    config.Config = &mapConfig
-    return nil
+	var mapConfig config.MapConfig
+	err = viper.Unmarshal(&mapConfig)
+	if err != nil {
+		return err
+	}
+
+	config.Config = &mapConfig
+
+	return nil
 }
 
 func connectToDb() (*pgxpool.Pool, error) {
-    conn, err := pgxpool.New(context.Background(), config.Config.DbConnectionString)
-    if err != nil{
-        return nil, err
-    } 
-    
-    err = conn.Ping(context.Background())
-    if err != nil {
-        return nil, err
-    }
-    return conn, nil
+	conn, err := pgxpool.New(context.Background(), config.Config.DbConnectionString)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.Ping(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
 }

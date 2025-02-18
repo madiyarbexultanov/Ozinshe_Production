@@ -1,17 +1,20 @@
 package handlers
 
 import (
+
 	"net/http"
 	"ozinshe_production/config"
 	"ozinshe_production/models"
 	"ozinshe_production/repositories"
 	"strconv"
 	"time"
+	"net/mail"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 
 	"golang.org/x/crypto/bcrypt"
+	
 )
 
 type AuthHandlers struct {
@@ -58,8 +61,24 @@ func (h *AuthHandlers) SignUp(c *gin.Context) {
 		return
 	}
 
+	if _, err := mail.ParseAddress(request.Email); err != nil {
+		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid email format"))
+		return
+	}
+
 	if request.Password != request.PasswordCheck {
 		c.JSON(http.StatusBadRequest, models.NewApiError("Passwords do not match"))
+		return
+	}
+
+	user, err := h.userRepo.FindByEmail(c, request.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.NewApiError("Server error: unable to check email"))
+		return
+	}
+
+	if user.Email != "" {
+		c.JSON(http.StatusBadRequest, models.NewApiError("Email already exists"))
 		return
 	}
 
@@ -77,7 +96,19 @@ func (h *AuthHandlers) SignUp(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"id": id})
+	claims := jwt.RegisteredClaims {
+		Subject: strconv.Itoa(id),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(config.Config.JwtExpiresIn)),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(config.Config.JwtSecretKey))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.NewApiError("Couldn't generate JWT token"))
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"token": tokenString})
 }
 
 
@@ -104,6 +135,7 @@ func (h *AuthHandlers) SignIn(c *gin.Context) {
 	user, err := h.userRepo.FindByEmail(c, request.Email)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, models.NewApiError(err.Error()))
+		return
 	}
 	
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(request.Password))
@@ -140,3 +172,5 @@ func (h *AuthHandlers) SignIn(c *gin.Context) {
 func (h *AuthHandlers) SignOut(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
+
+

@@ -18,7 +18,6 @@ func NewUsersRepository(conn *pgxpool.Pool) *UsersRepository {
 }
 
 
-
 func (r *UsersRepository) SignUp(c context.Context, user models.User) (int, error) {
 	logger := logger.GetLogger()
 	logger.Info("Creating new user", zap.String("email", user.Email))
