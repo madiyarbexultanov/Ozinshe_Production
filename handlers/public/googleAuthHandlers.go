@@ -1,4 +1,5 @@
-package handlers
+package public
+
 
 import (
 	"context"

@@ -2,11 +2,9 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"os"
 	"ozinshe_production/config"
 	"ozinshe_production/docs"
-	"ozinshe_production/handlers"
+	"ozinshe_production/handlers/public"
 	"ozinshe_production/logger"
 	"ozinshe_production/middlewares"
 	"ozinshe_production/repositories"
@@ -76,8 +74,8 @@ func main() {
 	usersRepository := repositories.NewUsersRepository(conn)
 
 	// usersHandler := handlers.NewUsersHandler(usersRepository)
-	authHandler := handlers.NewAuthHandlers(usersRepository)
-	googleAuthHandler := handlers.NewAuthHandlers(usersRepository)
+	authHandler := public.NewAuthHandlers(usersRepository)
+	googleAuthHandler := public.NewAuthHandlers(usersRepository)
 
 	authorized := r.Group("")
 	authorized.Use(middlewares.AuthMiddleware)
@@ -94,9 +92,6 @@ func main() {
 	unauthorized.GET("/swagger/*any", swagger.WrapHandler(swaggerfiles.Handler))
 
 	logger.Info("Application starting...")
-	fmt.Println("Google Client ID:", os.Getenv("GOOGLE_CLIENT_ID"))
-	fmt.Println("Google Client Secret:", os.Getenv("GOOGLE_CLIENT_SECRET"))
-	fmt.Println("Google Redirect URL:", os.Getenv("GOOGLE_REDIRECT_URL"))
 
 	r.Run(config.Config.AppHost)
 }
