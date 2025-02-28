@@ -15,6 +15,26 @@ func NewUsersRepository(conn *pgxpool.Pool) *UsersRepository {
 	return &UsersRepository{db: conn}
 }
 
+func (r *UsersRepository) FindAll(c context.Context) ([]models.User, error)  {
+	rows, err := r.db.Query(c, "select id, name, email from users")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []models.User
+	for rows.Next() {
+		var user models.User
+		err := rows.Scan(&user.Id, &user.Name, &user.Email)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
 
 func (r *UsersRepository) SignUp(c context.Context, user models.User) (int, error) {
 	var id int

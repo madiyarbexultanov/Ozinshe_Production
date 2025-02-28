@@ -5,6 +5,7 @@ import (
 	"ozinshe_production/config"
 	"ozinshe_production/docs"
 	"ozinshe_production/handlers/public"
+	"ozinshe_production/handlers/admin"
 	"ozinshe_production/logger"
 	"ozinshe_production/middlewares"
 	"ozinshe_production/repositories"
@@ -72,14 +73,38 @@ func main() {
 	}
 
 	usersRepository := repositories.NewUsersRepository(conn)
+	agesRepository := repositories.NewAgesRepository(conn)
+	genresRepository := repositories.NewGenresRepository(conn)
+	categoriesRepository := repositories.NewCategoriesRepository(conn)
 
-	// usersHandler := handlers.NewUsersHandler(usersRepository)
+	usersHandler := admin.NewUsersHandler(usersRepository)
+	agesHandler := admin.NewAgesHandler(agesRepository)
+	genresHandler := admin.NewGenresHandler(genresRepository)
+	categoriesHandler := admin.NewCategoriesHandler(categoriesRepository)
+
 	authHandler := public.NewAuthHandlers(usersRepository)
 	googleAuthHandler := public.NewAuthHandlers(usersRepository)
 
 	authorized := r.Group("")
 	authorized.Use(middlewares.AuthMiddleware)
 	authorized.POST("/auth/signOut", authHandler.SignOut)
+
+	r.GET("/admin/users", usersHandler.FindAll)
+
+	r.GET("/admin/ages", agesHandler.FindAll)
+	r.GET("/admin/ages/:id", agesHandler.FindById)
+	r.POST("/admin/ages", agesHandler.Create)
+	r.POST("/admin/ages/:id", agesHandler.Delete)
+
+	r.GET("/admin/genres", genresHandler.FindAll)
+	r.GET("/admin/genres/:id", genresHandler.FindById)
+	r.POST("/admin/genres", genresHandler.Create)
+	r.POST("/admin/genres/:id", genresHandler.Delete)
+
+	r.GET("/admin/categories", categoriesHandler.FindAll)
+	r.GET("/admin/categories/:id", categoriesHandler.FindById)
+	r.POST("/admin/categories", categoriesHandler.Create)
+	r.POST("/admin/categories/:id", categoriesHandler.Delete)
 
 	unauthorized := r.Group("")
 	unauthorized.POST("/auth/signUp", authHandler.SignUp)

@@ -1,6 +1,6 @@
 package models
 
-type Ages struct {
+type Genre struct {
 	Id			int
 	Title		string
 	PosterUrl	string
