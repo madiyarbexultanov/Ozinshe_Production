@@ -82,6 +82,38 @@ func (h *GenresHandler) Create(c *gin.Context) {
 	})
 }
 
+func (h *GenresHandler) Update(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid genre id"))
+		return
+	}
+
+	_, err = h.genresRepo.FindById(c, id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.NewApiError(err.Error()))
+		return
+	}
+
+	var updateGenre models.Genre
+	err = c.BindJSON(&updateGenre)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.NewApiError("Couldn't bind json"))
+		return
+	}
+
+
+	err = h.genresRepo.Update(c, id, updateGenre)
+	if err != nil {
+        c.JSON(http.StatusNotFound, models.NewApiError(err.Error()))
+        return
+    }
+
+	c.Status(http.StatusOK)
+}
+
 func (h *GenresHandler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)

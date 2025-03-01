@@ -55,6 +55,15 @@ func (r *CategoriesRepository) Create(c context.Context, categories models.Categ
 	return id, nil
 }
 
+func (r *CategoriesRepository) Update(c context.Context, id int, category models.Category) error {
+	_, err := r.db.Exec(c, "update categories set title=$1 where id=$2", category.Title, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *CategoriesRepository) Delete(c context.Context, id int) error {
 	_, err := r.db.Exec(c, "delete from categories where id=$1", id)
 	if err != nil {

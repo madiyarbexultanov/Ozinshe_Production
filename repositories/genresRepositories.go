@@ -55,6 +55,15 @@ func (r *GenresRepository) Create(c context.Context, genres models.Genre) (int, 
 	return id, nil
 }
 
+func (r *GenresRepository) Update(c context.Context, id int, genre models.Genre) error {
+	_, err := r.db.Exec(c, "update genres set title=$1 where id=$2", genre.Title, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *GenresRepository) Delete(c context.Context, id int) error {
 	_, err := r.db.Exec(c, "delete from genres where id=$1", id)
 	if err != nil {

@@ -82,6 +82,37 @@ func (h *AgesHandler) Create(c *gin.Context) {
 	})
 }
 
+func (h *AgesHandler) Update(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid ages id"))
+		return
+	}
+
+	_, err = h.agesRepo.FindById(c, id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.NewApiError(err.Error()))
+		return
+	}
+
+	var updateAges models.Ages
+	err = c.BindJSON(&updateAges)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.NewApiError("Couldn't bind json"))
+		return
+	}
+
+
+	err = h.agesRepo.Update(c, id, updateAges)
+	if err != nil {
+        c.JSON(http.StatusNotFound, models.NewApiError(err.Error()))
+        return
+    }
+	c.Status(http.StatusOK)
+}
+
 func (h *AgesHandler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)

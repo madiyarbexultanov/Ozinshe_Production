@@ -56,6 +56,15 @@ func (r *AgesRepository) Create(c context.Context, ages models.Ages) (int, error
 	return id, nil
 }
 
+func (r *AgesRepository) Update(c context.Context, id int, ages models.Ages) error {
+	_, err := r.db.Exec(c, "update ages set title=$1 where id=$2", ages.Title, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 
 func (r *AgesRepository) Delete(c context.Context, id int) error {
 	_, err := r.db.Exec(c, "delete from ages where id=$1", id)

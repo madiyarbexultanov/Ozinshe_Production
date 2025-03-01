@@ -94,16 +94,19 @@ func main() {
 	r.GET("/admin/ages", agesHandler.FindAll)
 	r.GET("/admin/ages/:id", agesHandler.FindById)
 	r.POST("/admin/ages", agesHandler.Create)
+	r.PUT("/admin/ages/:id", agesHandler.Update)
 	r.POST("/admin/ages/:id", agesHandler.Delete)
 
 	r.GET("/admin/genres", genresHandler.FindAll)
 	r.GET("/admin/genres/:id", genresHandler.FindById)
 	r.POST("/admin/genres", genresHandler.Create)
+	r.PUT("/admin/genres/:id", genresHandler.Update)
 	r.POST("/admin/genres/:id", genresHandler.Delete)
 
 	r.GET("/admin/categories", categoriesHandler.FindAll)
 	r.GET("/admin/categories/:id", categoriesHandler.FindById)
 	r.POST("/admin/categories", categoriesHandler.Create)
+	r.PUT("/admin/categories/:id", categoriesHandler.Update)
 	r.POST("/admin/categories/:id", categoriesHandler.Delete)
 
 	unauthorized := r.Group("")
