@@ -62,6 +62,9 @@ func main() {
 	r.Use(cors.New(corsConfig))
 	gin.SetMode(gin.ReleaseMode)
 
+
+	
+
 	err := loadConfig()
 	if err != nil {
 		panic(err)
@@ -72,15 +75,23 @@ func main() {
 		panic(err)
 	}
 
+	r.Use(func(c *gin.Context) {
+		c.Set("db", conn)
+		c.Next()
+	})
+
 	usersRepository := repositories.NewUsersRepository(conn)
 	agesRepository := repositories.NewAgesRepository(conn)
 	genresRepository := repositories.NewGenresRepository(conn)
 	categoriesRepository := repositories.NewCategoriesRepository(conn)
+	rolesRepository := repositories.NewRolesRepository(conn)
 
 	usersHandler := admin.NewUsersHandler(usersRepository)
 	agesHandler := admin.NewAgesHandler(agesRepository)
 	genresHandler := admin.NewGenresHandler(genresRepository)
 	categoriesHandler := admin.NewCategoriesHandler(categoriesRepository)
+	rolesHandler := admin.NewRolesHandler(rolesRepository)
+
 
 	authHandler := public.NewAuthHandlers(usersRepository)
 	googleAuthHandler := public.NewAuthHandlers(usersRepository)
@@ -89,25 +100,39 @@ func main() {
 	authorized.Use(middlewares.AuthMiddleware)
 	authorized.POST("/auth/signOut", authHandler.SignOut)
 
-	r.GET("/admin/users", usersHandler.FindAll)
+	permitted := r.Group("")
+	permitted.Use(middlewares.AuthMiddleware)
+	permitted.Use(middlewares.CheckPermissionMiddleware)
+	
+	permitted.GET("/admin/categories", categoriesHandler.FindAll)
+	permitted.GET("/admin/categories/:id", categoriesHandler.FindById)
+	permitted.POST("/admin/categories", categoriesHandler.Create)
+	permitted.PUT("/admin/categories/:id", categoriesHandler.Update)
+	permitted.DELETE("/admin/categories/:id", categoriesHandler.Delete)
 
-	r.GET("/admin/ages", agesHandler.FindAll)
-	r.GET("/admin/ages/:id", agesHandler.FindById)
-	r.POST("/admin/ages", agesHandler.Create)
-	r.PUT("/admin/ages/:id", agesHandler.Update)
-	r.POST("/admin/ages/:id", agesHandler.Delete)
+	permitted.GET("/admin/users", usersHandler.FindAll)
+	permitted.GET("/admin/users/:id", usersHandler.FindById)
+	permitted.PUT("/admin/users/:id", usersHandler.Update)
+	permitted.PUT("/admin/users/getRole/:id", usersHandler.AssignRole)
+	permitted.DELETE("/admin/users/:id", usersHandler.Delete)
 
-	r.GET("/admin/genres", genresHandler.FindAll)
-	r.GET("/admin/genres/:id", genresHandler.FindById)
-	r.POST("/admin/genres", genresHandler.Create)
-	r.PUT("/admin/genres/:id", genresHandler.Update)
-	r.POST("/admin/genres/:id", genresHandler.Delete)
+	permitted.GET("/roles", rolesHandler.FindAll)
+	permitted.GET("/roles/:id", rolesHandler.FindById)
+	permitted.POST("/roles", rolesHandler.Create)
+	permitted.PUT("/roles/:id", rolesHandler.Update)
+	permitted.DELETE("/roles/:id", rolesHandler.Delete)
 
-	r.GET("/admin/categories", categoriesHandler.FindAll)
-	r.GET("/admin/categories/:id", categoriesHandler.FindById)
-	r.POST("/admin/categories", categoriesHandler.Create)
-	r.PUT("/admin/categories/:id", categoriesHandler.Update)
-	r.POST("/admin/categories/:id", categoriesHandler.Delete)
+	permitted.GET("/admin/genres", genresHandler.FindAll)
+	permitted.GET("/admin/genres/:id", genresHandler.FindById)
+	permitted.POST("/admin/genres", genresHandler.Create)
+	permitted.PUT("/admin/genres/:id", genresHandler.Update)
+	permitted.DELETE("/admin/genres/:id", genresHandler.Delete)
+	
+	permitted.GET("/admin/ages", agesHandler.FindAll)
+	permitted.GET("/admin/ages/:id", agesHandler.FindById)
+	permitted.POST("/admin/ages", agesHandler.Create)
+	permitted.PUT("/admin/ages/:id", agesHandler.Update)
+	permitted.DELETE("/admin/ages/:id", agesHandler.Delete)
 
 	unauthorized := r.Group("")
 	unauthorized.POST("/auth/signUp", authHandler.SignUp)

@@ -52,7 +52,7 @@ func (h *GenresHandler) FindById(c *gin.Context) {
 }
 
 func (h *GenresHandler) Create(c *gin.Context) {
-	var createGenre createAgesRequest
+	var createGenre createGenresRequest
 
 	err := c.Bind(&createGenre)
 	if err != nil {

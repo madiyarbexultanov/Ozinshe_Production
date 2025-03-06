@@ -35,6 +35,16 @@ func (r *UsersRepository) FindAll(c context.Context) ([]models.User, error)  {
 	return users, nil
 }
 
+func (r *UsersRepository) FindById(c context.Context, id int) (models.User, error)  {
+	var user models.User
+	row := r.db.QueryRow(c, "select id, name, email, role_id from users where id = $1", id)
+	err := row.Scan(&user.Id, &user.Name, &user.Email, &user.RoleID)
+	if err != nil {
+		return models.User{}, err
+	}
+	return user, nil
+}
+
 
 func (r *UsersRepository) SignUp(c context.Context, user models.User) (int, error) {
 	var id int
@@ -48,6 +58,26 @@ func (r *UsersRepository) SignUp(c context.Context, user models.User) (int, erro
 	return id, nil
 }
 
+func (r *UsersRepository) Update(c context.Context, id int, user models.User) error {
+	_, err := r.db.Exec(c, `
+        UPDATE users SET email=$1, name=$2 WHERE id=$3`,
+		 user.Email, user.Name, id)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *UsersRepository) Delete(c context.Context, id int) error {
+	_, err := r.db.Exec(c, "delete from users where id=$1", id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+
 func (r *UsersRepository) FindByEmail(c context.Context, email string) (models.User, error) {
 	var user models.User
 	row := r.db.QueryRow(c, "select id, email, password from users where email = $1", email)
@@ -56,4 +86,9 @@ func (r *UsersRepository) FindByEmail(c context.Context, email string) (models.U
 	}
 
 	return user, nil
+}
+
+func (r *UsersRepository) AssignRole(c context.Context, userID int, roleID int) error {
+	_, err := r.db.Exec(c, "UPDATE users SET role_id = $1 WHERE id = $2", roleID, userID)
+	return err
 }

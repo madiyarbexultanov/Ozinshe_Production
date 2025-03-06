@@ -37,7 +37,7 @@ func (r *CategoriesRepository) FindAll(c context.Context) ([]models.Category, er
 
 func (r *CategoriesRepository) FindById(c context.Context, id int) (models.Category, error) {
 	var categories models.Category
-	row := r.db.QueryRow(c, "sselect id, title from categories where id = $1", id)
+	row := r.db.QueryRow(c, "select id, title from categories where id = $1", id)
 	err := row.Scan(&categories.Id, &categories.Title)
 	if err != nil {
 		return models.Category{}, err

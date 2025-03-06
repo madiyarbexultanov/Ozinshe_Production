@@ -77,18 +77,18 @@ func (h *AuthHandlers) SignUp(c *gin.Context) {
 		return
 	}
 
-	user, err := h.userRepo.FindByEmail(c, request.Email)
-	if err != nil {
-		logger.Error("Error checking email existence", zap.String("email", request.Email), zap.Error(err))
-		c.JSON(http.StatusInternalServerError, models.NewApiError("Server error: unable to check email"))
-		return
-	}
+	// user, err := h.userRepo.FindByEmail(c, request.Email)
+	// if err != nil {
+	// 	logger.Error("Error checking email existence", zap.String("email", request.Email), zap.Error(err))
+	// 	c.JSON(http.StatusInternalServerError, models.NewApiError("Server error: unable to check email"))
+	// 	return
+	// }
 
-	if user.Email != "" {
-		logger.Warn("Email already exists", zap.String("email", request.Email))
-		c.JSON(http.StatusBadRequest, models.NewApiError("Email already exists"))
-		return
-	}
+	// if user.Email != "" {
+	// 	logger.Warn("Email already exists", zap.String("email", request.Email))
+	// 	c.JSON(http.StatusBadRequest, models.NewApiError("Email already exists"))
+	// 	return
+	// }
 
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 	if err != nil {

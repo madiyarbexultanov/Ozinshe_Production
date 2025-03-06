@@ -5,4 +5,5 @@ type User struct {
 	Email			string
 	PasswordHash	string
 	Name			string
+	RoleID			int
 }
