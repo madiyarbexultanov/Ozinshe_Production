@@ -80,12 +80,17 @@ func main() {
 		c.Next()
 	})
 
+	moviesRepository := repositories.NewMoviesRepository(conn)
+	seasonsRepository := repositories.NewSeasonsRepository(conn)
+	episodessRepository := repositories.NewEpisodesRepository(conn)
 	usersRepository := repositories.NewUsersRepository(conn)
 	agesRepository := repositories.NewAgesRepository(conn)
 	genresRepository := repositories.NewGenresRepository(conn)
 	categoriesRepository := repositories.NewCategoriesRepository(conn)
 	rolesRepository := repositories.NewRolesRepository(conn)
 
+
+	moviesHandler := admin.NewMoviesHandler(moviesRepository, genresRepository,  agesRepository, categoriesRepository, seasonsRepository, episodessRepository)
 	usersHandler := admin.NewUsersHandler(usersRepository)
 	agesHandler := admin.NewAgesHandler(agesRepository)
 	genresHandler := admin.NewGenresHandler(genresRepository)
@@ -103,6 +108,12 @@ func main() {
 	permitted := r.Group("")
 	permitted.Use(middlewares.AuthMiddleware)
 	permitted.Use(middlewares.CheckPermissionMiddleware)
+
+	permitted.GET("/admin/movies", moviesHandler.FindAll)
+	permitted.GET("/admin/movies/:id", moviesHandler.FindById)
+	permitted.POST("/admin/movies", moviesHandler.Create)
+	permitted.POST("/admin/movies/:movieId/seasons", moviesHandler.AddSeasonsAndEpisodes)
+	permitted.PATCH("/admin/movies/:movieId/media", moviesHandler.AddMedia)
 	
 	permitted.GET("/admin/categories", categoriesHandler.FindAll)
 	permitted.GET("/admin/categories/:id", categoriesHandler.FindById)

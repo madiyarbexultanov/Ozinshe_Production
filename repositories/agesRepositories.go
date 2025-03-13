@@ -35,6 +35,30 @@ func (r *AgesRepository) FindAll(c context.Context) ([]models.Ages, error)  {
 	return ages, nil
 }
 
+func (r *AgesRepository) FindAllByIds(c context.Context, ids []int) ([]models.Ages, error) {
+	rows, err := r.db.Query(c, "select id, title from ages where id = any($1)", ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	ages := make([]models.Ages, 0)
+	for rows.Next() {
+		var age models.Ages
+		err := rows.Scan(&age.Id, &age.Title)
+		if err != nil {
+			return nil, err
+		}
+		ages = append(ages, age)
+	}
+
+	if err = rows.Err(); err != nil {
+        return nil, err
+    }
+
+	return ages, nil
+}
+
 
 func (r *AgesRepository) FindById(c context.Context, id int) (models.Ages, error) {
 	var ages models.Ages

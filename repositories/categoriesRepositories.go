@@ -35,6 +35,30 @@ func (r *CategoriesRepository) FindAll(c context.Context) ([]models.Category, er
 	return categories, nil
 }
 
+func (r *CategoriesRepository) FindAllByIds(c context.Context, ids []int) ([]models.Category, error) {
+	rows, err := r.db.Query(c, "select id, title from categories where id = any($1)", ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	categories := make([]models.Category, 0)
+	for rows.Next() {
+		var category models.Category
+		err := rows.Scan(&category.Id, &category.Title)
+		if err != nil {
+			return nil, err
+		}
+		categories = append(categories, category)
+	}
+
+	if err = rows.Err(); err != nil {
+        return nil, err
+    }
+
+	return categories, nil
+}
+
 func (r *CategoriesRepository) FindById(c context.Context, id int) (models.Category, error) {
 	var categories models.Category
 	row := r.db.QueryRow(c, "select id, title from categories where id = $1", id)

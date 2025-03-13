@@ -1,9 +1,10 @@
 package models
 
 type Movie struct {
+	Id			int
 	Title		string
-	Category	[]Category
-	GenreID		[]Genre
+	Categories	[]Category
+	Genres		[]Genre
 	Ages		[]Ages
 	ReleaseYear	int
 	Runtime		int

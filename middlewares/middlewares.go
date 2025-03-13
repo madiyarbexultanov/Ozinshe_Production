@@ -15,9 +15,12 @@ import (
 	"go.uber.org/zap"
 )
 
-func AuthMiddleware(c *gin.Context){
+func AuthMiddleware(c *gin.Context) {
+	logger := logger.GetLogger()
+
 	authHeader := c.GetHeader("Authorization")
 	if authHeader == "" {
+		logger.Warn("Authorization header missing")
 		c.JSON(http.StatusUnauthorized, models.NewApiError("authorization header required"))
 		c.Abort()
 		return
@@ -29,6 +32,7 @@ func AuthMiddleware(c *gin.Context){
 	})
 
 	if err != nil || !token.Valid {
+		logger.Error("Invalid token", zap.String("error", err.Error()))
 		c.JSON(http.StatusUnauthorized, models.NewApiError("invalid token"))
 		c.Abort()
 		return
@@ -36,12 +40,14 @@ func AuthMiddleware(c *gin.Context){
 
 	subject, err := token.Claims.GetSubject()
 	if err != nil {
+		logger.Error("Error getting subject from token", zap.String("error", err.Error()))
 		c.JSON(http.StatusUnauthorized, models.NewApiError("error while getting subject"))
 		c.Abort()
 		return
 	}
 
 	userId, _ := strconv.Atoi(subject)
+	logger.Info("Token validated", zap.Int("userId", userId))
 	c.Set("userId", userId)
 	c.Next()
 }

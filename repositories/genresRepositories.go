@@ -35,6 +35,30 @@ func (r *GenresRepository) FindAll(c context.Context) ([]models.Genre, error) {
 	return genres, nil
 }
 
+func (r *GenresRepository) FindAllByIds(c context.Context, ids []int) ([]models.Genre, error) {
+	rows, err := r.db.Query(c, "select id, title from genres where id = any($1)", ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	genres := make([]models.Genre, 0)
+	for rows.Next() {
+		var genre models.Genre
+		err := rows.Scan(&genre.Id, &genre.Title)
+		if err != nil {
+			return nil, err
+		}
+		genres = append(genres, genre)
+	}
+
+	if err = rows.Err(); err != nil {
+        return nil, err
+    }
+
+	return genres, nil
+}
+
 func (r *GenresRepository) FindById(c context.Context, id int) (models.Genre, error) {
 	var genres models.Genre
 	row := r.db.QueryRow(c, "select id, title, poster_url from genres where id = $1", id)
