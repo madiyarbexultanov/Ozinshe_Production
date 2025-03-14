@@ -99,11 +99,17 @@ func main() {
 
 
 	authHandler := public.NewAuthHandlers(usersRepository)
+	profilesHandler := public.NewProfilesHandler(usersRepository)
 	googleAuthHandler := public.NewAuthHandlers(usersRepository)
 
 	authorized := r.Group("")
 	authorized.Use(middlewares.AuthMiddleware)
-	authorized.POST("/auth/signOut", authHandler.SignOut)
+
+	authorized.GET("/public/profile/:id", profilesHandler.UserProfile)
+	authorized.PUT("/public/profile/:id", profilesHandler.Update)
+	authorized.PUT("/public/profile/changepassword/:id", profilesHandler.ChangePassword)
+
+	authorized.POST("/public/auth/signOut", authHandler.SignOut)
 
 	permitted := r.Group("")
 	permitted.Use(middlewares.AuthMiddleware)
@@ -123,15 +129,14 @@ func main() {
 
 	permitted.GET("/admin/users", usersHandler.FindAll)
 	permitted.GET("/admin/users/:id", usersHandler.FindById)
-	permitted.PUT("/admin/users/:id", usersHandler.Update)
 	permitted.PUT("/admin/users/getRole/:id", usersHandler.AssignRole)
 	permitted.DELETE("/admin/users/:id", usersHandler.Delete)
 
-	permitted.GET("/roles", rolesHandler.FindAll)
-	permitted.GET("/roles/:id", rolesHandler.FindById)
-	permitted.POST("/roles", rolesHandler.Create)
-	permitted.PUT("/roles/:id", rolesHandler.Update)
-	permitted.DELETE("/roles/:id", rolesHandler.Delete)
+	permitted.GET("/admin/roles", rolesHandler.FindAll)
+	permitted.GET("/admin/roles/:id", rolesHandler.FindById)
+	permitted.POST("/admin/roles", rolesHandler.Create)
+	permitted.PUT("/admin/roles/:id", rolesHandler.Update)
+	permitted.DELETE("/admin/roles/:id", rolesHandler.Delete)
 
 	permitted.GET("/admin/genres", genresHandler.FindAll)
 	permitted.GET("/admin/genres/:id", genresHandler.FindById)
@@ -146,11 +151,11 @@ func main() {
 	permitted.DELETE("/admin/ages/:id", agesHandler.Delete)
 
 	unauthorized := r.Group("")
-	unauthorized.POST("/auth/signUp", authHandler.SignUp)
-	unauthorized.POST("/auth/signIn", authHandler.SignIn)
+	unauthorized.POST("/public/auth/signUp", authHandler.SignUp)
+	unauthorized.POST("/public/auth/signIn", authHandler.SignIn)
 
-	unauthorized.GET("/auth/google", googleAuthHandler.GoogleLogin)
-	unauthorized.GET("/auth/google/callback", authHandler.GoogleCallback)
+	unauthorized.GET("/public/auth/google", googleAuthHandler.GoogleLogin)
+	unauthorized.GET("/public/auth/google/callback", authHandler.GoogleCallback)
 
 	docs.SwaggerInfo.BasePath = "/"
 	unauthorized.GET("/swagger/*any", swagger.WrapHandler(swaggerfiles.Handler))

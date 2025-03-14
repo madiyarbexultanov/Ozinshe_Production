@@ -30,6 +30,7 @@ type AssignRoleRequest struct {
 	RoleID int `json:"role_id" binding:"required"`
 }
 
+
 func (h *UsersHandler) FindAll(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -70,44 +71,6 @@ func (h *UsersHandler) FindById(c *gin.Context) {
 
 	logger.Info("User found", zap.Int("id", id), zap.String("name", user.Name))
 	c.JSON(http.StatusOK, user)
-}
-
-func (h *UsersHandler) Update(c *gin.Context) {
-	logger := logger.GetLogger()
-
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-
-	if err != nil {
-		logger.Error("Invalid user id", zap.String("id", idStr))
-		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid user id"))
-		return
-	}
-
-	_, err = h.userRepo.FindById(c, id)
-	if err != nil {
-		logger.Error("Failed to find user", zap.Int("id", id), zap.Error(err))
-		c.JSON(http.StatusBadRequest, models.NewApiError(err.Error()))
-		return
-	}
-
-	var updateUser models.User
-	err = c.BindJSON(&updateUser)
-	if err != nil {
-		logger.Error("Couldn't bind JSON", zap.Error(err))
-		c.JSON(http.StatusBadRequest, models.NewApiError("Couldn't bind json"))
-		return
-	}
-
-	err = h.userRepo.Update(c, id, updateUser)
-	if err != nil {
-		logger.Error("Failed to update user", zap.Int("id", id), zap.Error(err))
-		c.JSON(http.StatusNotFound, models.NewApiError(err.Error()))
-		return
-	}
-
-	logger.Info("User updated successfully", zap.Int("id", id))
-	c.Status(http.StatusOK)
 }
 
 func (h *UsersHandler) Delete(c *gin.Context) {

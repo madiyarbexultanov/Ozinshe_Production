@@ -40,10 +40,8 @@ type SignInRequest struct {
 	Password 		string
 }
 
-type ResetPasswordRequest struct {
-	Password 		string `json:"password" binding:"required,min=8"`
-	PasswordCheck 	string `json:"passwordCheck" binding:"required,min=8"`
-}
+
+
 
 // SignUp godoc
 // @Summary      User Registration
@@ -77,18 +75,18 @@ func (h *AuthHandlers) SignUp(c *gin.Context) {
 		return
 	}
 
-	// user, err := h.userRepo.FindByEmail(c, request.Email)
-	// if err != nil {
-	// 	logger.Error("Error checking email existence", zap.String("email", request.Email), zap.Error(err))
-	// 	c.JSON(http.StatusInternalServerError, models.NewApiError("Server error: unable to check email"))
-	// 	return
-	// }
+	user, err := h.userRepo.FindByEmail(c, request.Email)
+	if err != nil {
+		logger.Error("Error checking email existence", zap.String("email", request.Email), zap.Error(err))
+		c.JSON(http.StatusInternalServerError, models.NewApiError("Server error: unable to check email"))
+		return
+	}
 
-	// if user.Email != "" {
-	// 	logger.Warn("Email already exists", zap.String("email", request.Email))
-	// 	c.JSON(http.StatusBadRequest, models.NewApiError("Email already exists"))
-	// 	return
-	// }
+	if user.Email != "" {
+		logger.Warn("Email already exists", zap.String("email", request.Email))
+		c.JSON(http.StatusBadRequest, models.NewApiError("Email already exists"))
+		return
+	}
 
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -176,6 +174,8 @@ func (h *AuthHandlers) SignIn(c *gin.Context) {
 	logger.Info("User successfully signed in", zap.String("email", request.Email))
 	c.JSON(http.StatusOK, gin.H{"token": tokenString})
 }
+
+
 
 // SignOut godoc
 // @Summary      User Sign Out

@@ -16,7 +16,7 @@ func NewUsersRepository(conn *pgxpool.Pool) *UsersRepository {
 }
 
 func (r *UsersRepository) FindAll(c context.Context) ([]models.User, error)  {
-	rows, err := r.db.Query(c, "select id, name, email from users")
+	rows, err := r.db.Query(c, "select id, name, email, phone_number, birth_date from users")
 	if err != nil {
 		return nil, err
 	}
@@ -58,10 +58,21 @@ func (r *UsersRepository) SignUp(c context.Context, user models.User) (int, erro
 	return id, nil
 }
 
+func (r *UsersRepository) UserProfile(c context.Context, id int) (models.User, error)  {
+	var user models.User
+	row := r.db.QueryRow(c, "select id, name, email, phone_number, birth_date from users where id = $1", id)
+	err := row.Scan(&user.Id, &user.Name, &user.Email, &user.Phone, &user.Birthday)
+	if err != nil {
+		return models.User{}, err
+	}
+	return user, nil
+}
+
+
 func (r *UsersRepository) Update(c context.Context, id int, user models.User) error {
 	_, err := r.db.Exec(c, `
-        UPDATE users SET email=$1, name=$2 WHERE id=$3`,
-		 user.Email, user.Name, id)
+        UPDATE users SET email=$1, name=$2, phone_number=$3, birth_date=$4 WHERE id=$5`,
+		 user.Email, user.Name, user.Phone, user.Birthday, id)
 
 	if err != nil {
 		return err
@@ -69,8 +80,17 @@ func (r *UsersRepository) Update(c context.Context, id int, user models.User) er
 	return nil
 }
 
+
 func (r *UsersRepository) Delete(c context.Context, id int) error {
 	_, err := r.db.Exec(c, "delete from users where id=$1", id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *UsersRepository) ChangePasswordHash(c context.Context, id int, password string) error {
+	_, err := r.db.Exec(c, "update users set password=$1 where id=$2", password, id)
 	if err != nil {
 		return err
 	}
