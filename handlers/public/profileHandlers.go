@@ -46,7 +46,6 @@ func (h *ProfilesHandler) UserProfile(c *gin.Context) {
 
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
-
 	if err != nil {
 		logger.Error("Invalid user id", zap.String("id", idStr))
 		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid user id"))
@@ -67,7 +66,7 @@ func (h *ProfilesHandler) UserProfile(c *gin.Context) {
 		Birthday: user.Birthday.Format("2006-01-02"),
 	}
 
-	logger.Info("User found", zap.Int("id", id), zap.String("name", user.Name))
+	logger.Info("User profile retrieved successfully", zap.Int("id", id), zap.String("name", user.Name))
 	c.JSON(http.StatusOK, response)
 }
 
@@ -76,7 +75,6 @@ func (h *ProfilesHandler) Update(c *gin.Context) {
 
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
-
 	if err != nil {
 		logger.Error("Invalid user id", zap.String("id", idStr))
 		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid user id"))
@@ -85,7 +83,7 @@ func (h *ProfilesHandler) Update(c *gin.Context) {
 
 	_, err = h.userRepo.FindById(c, id)
 	if err != nil {
-		logger.Error("Failed to find user", zap.Int("id", id), zap.Error(err))
+		logger.Error("Failed to find user for update", zap.Int("id", id), zap.Error(err))
 		c.JSON(http.StatusBadRequest, models.NewApiError(err.Error()))
 		return
 	}
@@ -93,18 +91,17 @@ func (h *ProfilesHandler) Update(c *gin.Context) {
 	var updateUser updateRequest
 	err = c.BindJSON(&updateUser)
 	if err != nil {
-		logger.Error("Couldn't bind JSON", zap.Error(err))
+		logger.Error("Couldn't bind JSON for update", zap.Error(err))
 		c.JSON(http.StatusBadRequest, models.NewApiError("Couldn't bind json"))
 		return
 	}
 
 	userToUpdate := models.User{
-		Email:    updateUser.Email,
-		Name:     updateUser.Name,
-		Phone:    updateUser.Phone,
+		Email: updateUser.Email,
+		Name:  updateUser.Name,
+		Phone: updateUser.Phone,
 	}
-	
-	// Парсим дату
+
 	if updateUser.Birthday != "" {
 		birthDate, err := time.Parse("2006-01-02", updateUser.Birthday)
 		if err != nil {
@@ -127,35 +124,49 @@ func (h *ProfilesHandler) Update(c *gin.Context) {
 }
 
 func (h *ProfilesHandler) ChangePassword(c *gin.Context) {
-	userId, _ := c.Get("userId")
+	logger := logger.GetLogger()
+
+	userId, exists := c.Get("userId")
+	if !exists {
+		logger.Error("Missing user ID in context")
+		c.JSON(http.StatusUnauthorized, models.NewApiError("Invalid user ID"))
+		return
+	}
 
 	id, ok := userId.(int)
 	if !ok {
+		logger.Error("Invalid user ID type", zap.Any("userId", userId))
 		c.JSON(http.StatusUnauthorized, models.NewApiError("Invalid user ID"))
 		return
 	}
 
 	var request ResetPasswordRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
+		logger.Error("Invalid JSON payload for password change", zap.Error(err))
 		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid payload"))
 		return
 	}
 
 	if request.Password != request.PasswordCheck {
+		logger.Warn("Passwords do not match", zap.Int("id", id))
 		c.JSON(http.StatusBadRequest, models.NewApiError("Passwords do not match"))
 		return
 	}
 
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 	if err != nil {
+		logger.Error("Failed to hash password", zap.Int("id", id), zap.Error(err))
 		c.JSON(http.StatusInternalServerError, models.NewApiError("Failed to hash password"))
 		return
 	}
 
-	if err := h.userRepo.ChangePasswordHash(c, id, string(passwordHash)); err != nil {
+	err = h.userRepo.ChangePasswordHash(c, id, string(passwordHash))
+	if err != nil {
+		logger.Error("Failed to update password", zap.Int("id", id), zap.Error(err))
 		c.JSON(http.StatusInternalServerError, models.NewApiError("Failed to update password"))
 		return
 	}
 
+	logger.Info("Password changed successfully", zap.Int("id", id))
 	c.Status(http.StatusOK)
 }
