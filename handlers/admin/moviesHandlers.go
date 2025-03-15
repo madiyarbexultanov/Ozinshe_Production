@@ -162,60 +162,41 @@ func (h *MoviesHandler) Create(c *gin.Context) {
 func (h *MoviesHandler) AddSeasonsAndEpisodes(c *gin.Context) {
 	logger := logger.GetLogger()
 
-	// Получаем movieId из параметров URL
-	movieID := c.Param("movieId")
-	if movieID == "" {
-		logger.Error("movieId is required")
-		c.JSON(http.StatusBadRequest, models.NewApiError("movieId is required"))
-		return
-	}
-
-	var request createSeasonRequest
-	// Приводим movieId из строки в int
-	id, err := strconv.Atoi(movieID)
+	// Получаем movieId
+	movieID, err := strconv.Atoi(c.Param("movieId"))
 	if err != nil {
 		logger.Error("Invalid movieId", zap.Error(err))
 		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid movieId"))
 		return
 	}
 
-	// Встраиваем movieId в тело запроса
-	request.MovieID = id
+	var request createSeasonRequest
+	request.MovieID = movieID
 
-	// Привязываем остальные данные из тела запроса
+	// Привязываем данные
 	if err := c.Bind(&request); err != nil {
 		logger.Error("Failed to bind request payload", zap.Error(err))
 		c.JSON(http.StatusBadRequest, models.NewApiError("Couldn't bind payload"))
 		return
 	}
 
-	// Создаем сезоны
-	seasonID, err := h.seasonsRepo.Create(c, models.Season{
-		MovieID: request.MovieID,
-		Number:  request.Number,
-	})
+	// Создаем сезон
+	seasonID, err := h.seasonsRepo.Create(c, models.Season{MovieID: request.MovieID, Number: request.Number})
 	if err != nil {
 		logger.Error("Failed to create season", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, models.NewApiError("Failed to create season"))
+		c.JSON(http.StatusBadRequest, models.NewApiError(err.Error()))
 		return
 	}
 
-	// Создаем эпизоды для сезона
+	// Создаем эпизоды
 	for _, episodeReq := range request.Episodes {
-		episode := models.Episode{
-			SeasonID: seasonID,
-			Number:   episodeReq.Number,
-			VideoURL: episodeReq.VideoURL,
-		}
-		_, err := h.episodesRepo.Create(c, episode)
+		_, err := h.episodesRepo.Create(c, models.Episode{SeasonID: seasonID, Number: episodeReq.Number, VideoURL: episodeReq.VideoURL})
 		if err != nil {
-			logger.Error("Failed to create episode", zap.Error(err))
-			c.JSON(http.StatusInternalServerError, models.NewApiError("Failed to create episode"))
-			return
+			logger.Warn("Skipping duplicate episode", zap.Error(err))
 		}
 	}
 
-	logger.Info("Seasons and episodes added successfully", zap.Int("movieID", request.MovieID))
+	logger.Info("Seasons and episodes added successfully")
 	c.JSON(http.StatusOK, gin.H{"message": "Seasons and episodes added successfully"})
 }
 

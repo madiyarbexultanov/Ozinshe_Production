@@ -19,7 +19,9 @@ func (r *MoviesRepository) FindById(c context.Context, id int) (models.Movie, er
 	sql := `
 	select 
 	m.id, m.title, m.release_year, m.runtime, m.keywords, m.description, m.director, 
-	m.producer, m.cover, m.screenshots,
+	m.producer,
+	COALESCE(m.cover, '') AS cover, 
+    COALESCE(m.screenshots, '{}'::TEXT[]) AS screenshots, 
 	g.id, g.title,
 	c.id, c.title,
 	a.id, a.title,
@@ -85,7 +87,16 @@ func (r *MoviesRepository) FindById(c context.Context, id int) (models.Movie, er
 			}
 		}
 		if e.Id != 0 {
-			seasonEpisodesMap[s.Id] = append(seasonEpisodesMap[s.Id], e)
+			exists := false
+			for _, ep := range seasonEpisodesMap[s.Id] {
+				if ep.Id == e.Id {
+					exists = true
+					break
+				}
+			}
+			if !exists {
+				seasonEpisodesMap[s.Id] = append(seasonEpisodesMap[s.Id], e)
+			}
 		}
 	}
 
@@ -116,7 +127,9 @@ func (r *MoviesRepository) FindAll(c context.Context) ([]models.Movie, error) {
 	sql := `
 	SELECT 
 	m.id, m.title, m.description, m.release_year, m.director, m.producer, 
-	m.runtime, m.keywords, m.cover, m.screenshots,
+	m.runtime, m.keywords, 
+	COALESCE(m.cover, '') AS cover, 
+    COALESCE(m.screenshots, '{}'::TEXT[]) AS screenshots, 
 	g.id, g.title, 
 	c.id, c.title,
 	a.id, a.title,
@@ -318,8 +331,8 @@ func containsAge(ages []models.Ages, a models.Ages) bool {
 }
 
 func containsSeason(seasons []models.Season, s models.Season) bool {
-	for _, seoson := range seasons {
-		if seoson.Id == s.Id {
+	for _, season := range seasons {
+		if season.Id == s.Id {
 			return true
 		}
 	}
