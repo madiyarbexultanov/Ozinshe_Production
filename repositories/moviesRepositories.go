@@ -175,7 +175,7 @@ func (r *MoviesRepository) FindAll(c context.Context, filters models.Moviesfilte
 		params["typeid"] = filters.CategoryIds
 	}
 	
-	rows, err := r.db.Query(c, sql, filters)
+	rows, err := r.db.Query(c, sql, params)
 	if err != nil {
 		return nil, err
 	}

@@ -4,8 +4,8 @@ import (
 	"context"
 	"ozinshe_production/config"
 	"ozinshe_production/docs"
-	"ozinshe_production/handlers/public"
 	"ozinshe_production/handlers/admin"
+	"ozinshe_production/handlers/public"
 	"ozinshe_production/logger"
 	"ozinshe_production/middlewares"
 	"ozinshe_production/repositories"
@@ -15,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 
 	ginzap "github.com/gin-contrib/zap"
 	swaggerfiles "github.com/swaggo/files"
@@ -48,6 +49,12 @@ func main() {
 
 	logger := logger.GetLogger()
 
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Error("Application crashed!", zap.Any("error", r))
+		}
+	}()
+
 	r.Use(
 		ginzap.Ginzap(logger, time.RFC3339, true),
 		ginzap.RecoveryWithZap(logger, true),
@@ -62,17 +69,16 @@ func main() {
 	r.Use(cors.New(corsConfig))
 	gin.SetMode(gin.ReleaseMode)
 
-
-	
-
+	logger.Info("Loading configuration...")
 	err := loadConfig()
 	if err != nil {
-		panic(err)
+		logger.Fatal("Failed to load config", zap.Error(err))
 	}
 
+	logger.Info("Connecting to database...")
 	conn, err := connectToDb()
 	if err != nil {
-		panic(err)
+		logger.Fatal("Database connection failed", zap.Error(err))
 	}
 
 	r.Use(func(c *gin.Context) {
@@ -83,26 +89,26 @@ func main() {
 	moviesRepository := repositories.NewMoviesRepository(conn)
 	recommendationsRepository := repositories.NewRecommendationsRepository(conn)
 	seasonsRepository := repositories.NewSeasonsRepository(conn)
-	episodessRepository := repositories.NewEpisodesRepository(conn)
+	episodesRepository := repositories.NewEpisodesRepository(conn)
 	movieTypesRepository := repositories.NewMovieTypesRepository(conn)
 	usersRepository := repositories.NewUsersRepository(conn)
 	agesRepository := repositories.NewAgesRepository(conn)
 	genresRepository := repositories.NewGenresRepository(conn)
 	categoriesRepository := repositories.NewCategoriesRepository(conn)
 	rolesRepository := repositories.NewRolesRepository(conn)
-	SearchRepository := repositories.NewSearchRepository(conn)
+	searchRepository  := repositories.NewSearchRepository(conn)
 
 
 	moviesHandler := admin.NewMoviesHandler(moviesRepository, movieTypesRepository, genresRepository,  agesRepository, categoriesRepository)
 	recommendationsHandler := admin.NewRecommendationsHandler(recommendationsRepository)
-	contetnsHandler := admin.NewContentsHandler(seasonsRepository, episodessRepository)
+	contentsHandler := admin.NewContentsHandler(seasonsRepository, episodesRepository)
 	usersHandler := admin.NewUsersHandler(usersRepository)
 	movieTypesHandler := admin.NewMovieTypesHandler(movieTypesRepository)
 	agesHandler := admin.NewAgesHandler(agesRepository)
 	genresHandler := admin.NewGenresHandler(genresRepository)
 	categoriesHandler := admin.NewCategoriesHandler(categoriesRepository)
 	rolesHandler := admin.NewRolesHandler(rolesRepository)
-	searchHandler := admin.NewSearchHandler(SearchRepository)
+	searchHandler := admin.NewSearchHandler(searchRepository )
 
 
 	authHandler := public.NewAuthHandlers(usersRepository)
@@ -121,61 +127,103 @@ func main() {
 	permitted := r.Group("")
 	permitted.Use(middlewares.AuthMiddleware)
 	permitted.Use(middlewares.CheckPermissionMiddleware)
-
-	permitted.GET("/admin/movies", moviesHandler.FindAll)
-	permitted.GET("/admin/movies/:id", moviesHandler.FindById)
-	permitted.POST("/admin/movies", moviesHandler.Create)
-	permitted.PUT("/admin/movies/:id", moviesHandler.Update)
-	permitted.PATCH("/admin/movies/:movieId/media", moviesHandler.AddMedia)
-	permitted.DELETE("/admin/movies/:id", moviesHandler.Delete)
-
-	permitted.POST("/admin/movies/:movieId/seasons", contetnsHandler.AddSeasonsAndEpisodes)
-	permitted.PUT("/admin/movies/:movieId/seasons/:seasonId", contetnsHandler.UpdateSeason)
-	permitted.PUT("/admin/seasons/:seasonId/episodes/:episodeId", contetnsHandler.UpdateEpisode)
-	permitted.DELETE("/admin/movies/:movieId/seasons/:seasonId", contetnsHandler.DeleteSeason)
-	permitted.DELETE("/admin/seasons/:seasonId/episodes/:episodeId", contetnsHandler.DeleteEpisode)
-
-	permitted.GET("/admin/recommendations", recommendationsHandler.FindAll)
-	permitted.GET("/admin/recommendations/:id", recommendationsHandler.FindById)
-	permitted.POST("/admin/recommendations", recommendationsHandler.Create)
-	permitted.PATCH("/admin/recommendations/:id", recommendationsHandler.Delete)
-
-	permitted.GET("/admin/movieTypes", movieTypesHandler.FindAll)
-	permitted.GET("/admin/movieTypes/:id", movieTypesHandler.FindById)
-	permitted.POST("/admin/movieTypes", movieTypesHandler.Create)
-	permitted.PUT("/admin/movieTypes/:id", movieTypesHandler.Update)
-	permitted.DELETE("/admin/movieTypes/:id", movieTypesHandler.Delete)
-
-	permitted.GET("/admin/categories", categoriesHandler.FindAll)
-	permitted.GET("/admin/categories/:id", categoriesHandler.FindById)
-	permitted.POST("/admin/categories", categoriesHandler.Create)
-	permitted.PUT("/admin/categories/:id", categoriesHandler.Update)
-	permitted.DELETE("/admin/categories/:id", categoriesHandler.Delete)
-
-	permitted.GET("/admin/users", usersHandler.FindAll)
-	permitted.GET("/admin/users/:id", usersHandler.FindById)
-	permitted.PUT("/admin/users/getRole/:id", usersHandler.AssignRole)
-	permitted.DELETE("/admin/users/:id", usersHandler.Delete)
-
-	permitted.GET("/admin/roles", rolesHandler.FindAll)
-	permitted.GET("/admin/roles/:id", rolesHandler.FindById)
-	permitted.POST("/admin/roles", rolesHandler.Create)
-	permitted.PUT("/admin/roles/:id", rolesHandler.Update)
-	permitted.DELETE("/admin/roles/:id", rolesHandler.Delete)
-
-	permitted.GET("/admin/genres", genresHandler.FindAll)
-	permitted.GET("/admin/genres/:id", genresHandler.FindById)
-	permitted.POST("/admin/genres", genresHandler.Create)
-	permitted.PUT("/admin/genres/:id", genresHandler.Update)
-	permitted.DELETE("/admin/genres/:id", genresHandler.Delete)
 	
-	permitted.GET("/admin/ages", agesHandler.FindAll)
-	permitted.GET("/admin/ages/:id", agesHandler.FindById)
-	permitted.POST("/admin/ages", agesHandler.Create)
-	permitted.PUT("/admin/ages/:id", agesHandler.Update)
-	permitted.DELETE("/admin/ages/:id", agesHandler.Delete)
-
+	// Фильмы
+	movies := permitted.Group("/admin/movies")
+	{
+		movies.GET("", moviesHandler.FindAll)
+		movies.POST("", moviesHandler.Create)
+		movies.GET("/:id", moviesHandler.FindById)
+		movies.PUT("/:id", moviesHandler.Update)
+		movies.PATCH("/:id/media", moviesHandler.AddMedia)
+		movies.DELETE("/:id", moviesHandler.Delete)
+	
+		seasons := movies.Group("/:id/seasons")
+		{
+			seasons.POST("", contentsHandler.AddSeasonsAndEpisodes)
+			seasons.PUT("/:seasonId/edit", contentsHandler.UpdateSeason)
+			seasons.DELETE("/:seasonId", contentsHandler.DeleteSeason)
+		}
+	}
+	
+	// Сезоны и эпизоды
+	seasons := permitted.Group("/admin/seasons")
+	{
+		seasons.PUT("/:seasonId/episodes/:episodeId", contentsHandler.UpdateEpisode)
+		seasons.DELETE("/:seasonId/episodes/:episodeId", contentsHandler.DeleteEpisode)
+	}
+	
+	// Рекомендации
+	recommendations := permitted.Group("/admin/recommendations")
+	{
+		recommendations.GET("", recommendationsHandler.FindAll)
+		recommendations.POST("", recommendationsHandler.Create)
+		recommendations.GET("/:id", recommendationsHandler.FindById)
+		recommendations.DELETE("/:id", recommendationsHandler.Delete)
+	}
+	
+	// Типы фильмов
+	movieTypes := permitted.Group("/admin/movieTypes")
+	{
+		movieTypes.GET("", movieTypesHandler.FindAll)
+		movieTypes.POST("", movieTypesHandler.Create)
+		movieTypes.GET("/:id", movieTypesHandler.FindById)
+		movieTypes.PUT("/:id", movieTypesHandler.Update)
+		movieTypes.DELETE("/:id", movieTypesHandler.Delete)
+	}
+	
+	// Категории
+	categories := permitted.Group("/admin/categories")
+	{
+		categories.GET("", categoriesHandler.FindAll)
+		categories.POST("", categoriesHandler.Create)
+		categories.GET("/:id", categoriesHandler.FindById)
+		categories.PUT("/:id", categoriesHandler.Update)
+		categories.DELETE("/:id", categoriesHandler.Delete)
+	}
+	
+	// Пользователи
+	users := permitted.Group("/admin/users")
+	{
+		users.GET("", usersHandler.FindAll)
+		users.GET("/:id", usersHandler.FindById)
+		users.PUT("/:id/role", usersHandler.AssignRole)
+		users.DELETE("/:id", usersHandler.Delete)
+	}
+	
+	// Роли
+	roles := permitted.Group("/admin/roles")
+	{
+		roles.GET("", rolesHandler.FindAll)
+		roles.POST("", rolesHandler.Create)
+		roles.GET("/:id", rolesHandler.FindById)
+		roles.PUT("/:id", rolesHandler.Update)
+		roles.DELETE("/:id", rolesHandler.Delete)
+	}
+	
+	// Жанры
+	genres := permitted.Group("/admin/genres")
+	{
+		genres.GET("", genresHandler.FindAll)
+		genres.POST("", genresHandler.Create)
+		genres.GET("/:id", genresHandler.FindById)
+		genres.PUT("/:id", genresHandler.Update)
+		genres.DELETE("/:id", genresHandler.Delete)
+	}
+	
+	// Возрастные ограничения
+	ages := permitted.Group("/admin/ages")
+	{
+		ages.GET("", agesHandler.FindAll)
+		ages.POST("", agesHandler.Create)
+		ages.GET("/:id", agesHandler.FindById)
+		ages.PUT("/:id", agesHandler.Update)
+		ages.DELETE("/:id", agesHandler.Delete)
+	}
+	
+	// Поиск
 	permitted.GET("/admin/search", searchHandler.SearchAll)
+	
 
 	unauthorized := r.Group("")
 	unauthorized.POST("/public/auth/signUp", authHandler.SignUp)
@@ -188,8 +236,13 @@ func main() {
 	unauthorized.GET("/swagger/*any", swagger.WrapHandler(swaggerfiles.Handler))
 
 	logger.Info("Application starting...")
+	for _, route := range r.Routes() {
+		logger.Info("Registered route", zap.String("method", route.Method), zap.String("path", route.Path))
+	}
 
-	r.Run(config.Config.AppHost)
+	if err := r.Run(config.Config.AppHost); err != nil {
+		logger.Fatal("Server failed to start", zap.Error(err))
+	}
 }
 
 func loadConfig() error {
