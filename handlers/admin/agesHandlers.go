@@ -25,6 +25,14 @@ type createAgesRequest struct {
 	Poster *multipart.FileHeader `form:"poster"`
 }
 
+// FindAll godoc
+// @Summary      Get all ages
+// @Description  Retrieves a list of all ages
+// @Tags         ages
+// @Produce      json
+// @Success      200 {array} models.Ages "A list of ages"
+// @Failure      500 {object} models.ApiError "Internal server error"
+// @Router       /admin/ages [get]
 func (h *AgesHandler) FindAll(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -39,6 +47,16 @@ func (h *AgesHandler) FindAll(c *gin.Context) {
 	c.JSON(http.StatusOK, ages)
 }
 
+// FindById godoc
+// @Summary      Get age by ID
+// @Description  Retrieves an age by its ID
+// @Tags         ages
+// @Produce      json
+// @Param        id path int true "Age ID"
+// @Success      200 {object} models.Ages "Age details"
+// @Failure      400 {object} models.ApiError "Invalid age ID"
+// @Failure      404 {object} models.ApiError "Age not found"
+// @Router       /admin/ages/{id} [get]
 func (h *AgesHandler) FindById(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -61,6 +79,17 @@ func (h *AgesHandler) FindById(c *gin.Context) {
 	c.JSON(http.StatusOK, ages)
 }
 
+// Create godoc
+// @Summary      Create new age
+// @Description  Creates a new age entry
+// @Tags         ages
+// @Accept       json
+// @Produce      json
+// @Param        request body createAgesRequest true "Create age request"
+// @Success      200 {object} gin.H "ID of the created age"
+// @Failure      400 {object} models.ApiError "Invalid input"
+// @Failure      500 {object} models.ApiError "Failed to save poster or create age"
+// @Router       /admin/ages [post]
 func (h *AgesHandler) Create(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -99,6 +128,18 @@ func (h *AgesHandler) Create(c *gin.Context) {
 	})
 }
 
+// Update godoc
+// @Summary      Update an existing age
+// @Description  Updates an existing age by ID
+// @Tags         ages
+// @Accept       json
+// @Produce      json
+// @Param        id path int true "Age ID"
+// @Param        request body models.Ages true "Update age request"
+// @Success      200 {object} string "Success message"
+// @Failure      400 {object} models.ApiError "Invalid age ID or input"
+// @Failure      404 {object} models.ApiError "Age not found"
+// @Router       /admin/ages/{id} [put]
 func (h *AgesHandler) Update(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -136,6 +177,15 @@ func (h *AgesHandler) Update(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// Delete godoc
+// @Summary      Delete an age by ID
+// @Description  Deletes an age by its ID
+// @Tags         ages
+// @Param        id path int true "Age ID"
+// @Success      200 {object} string "Success message"
+// @Failure      400 {object} models.ApiError "Invalid age ID"
+// @Failure      500 {object} models.ApiError "Failed to delete age"
+// @Router       /admin/ages/{id} [delete]
 func (h *AgesHandler) Delete(c *gin.Context) {
 	logger := logger.GetLogger()
 

@@ -100,7 +100,7 @@ func CheckPermissionMiddleware(c *gin.Context) {
 	// Карта для проверки прав на редактирование
 	permissions := map[string]bool{
 		"/admin/categories": role.CanEditCategories,
-		"/admin/projects":   role.CanEditProjects,
+		"/admin/movies":   	 role.CanEditProjects,
 		"/admin/users":      role.CanEditUsers,
 		"/admin/roles":      role.CanEditRoles,
 		"/admin/genres":     role.CanEditGenres,

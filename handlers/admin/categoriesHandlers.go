@@ -23,6 +23,14 @@ type createCategoryRequest struct {
 	Title  string `form:"title"`
 }
 
+// FindAll godoc
+// @Summary      Get all categories
+// @Description  Retrieves a list of all categories
+// @Tags         categories
+// @Produce      json
+// @Success      200 {array} models.Category "A list of categories"
+// @Failure      500 {object} models.ApiError "Internal server error"
+// @Router       /categories [get]
 func (h *CategoriesHandler) FindAll(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -37,6 +45,16 @@ func (h *CategoriesHandler) FindAll(c *gin.Context) {
 	c.JSON(http.StatusOK, categories)
 }
 
+// FindById godoc
+// @Summary      Get category by ID
+// @Description  Retrieves a category by its ID
+// @Tags         categories
+// @Produce      json
+// @Param        id path int true "Category ID"
+// @Success      200 {object} models.Category "Category details"
+// @Failure      400 {object} models.ApiError "Invalid category ID"
+// @Failure      404 {object} models.ApiError "Category not found"
+// @Router       /admin/categories/{id} [get]
 func (h *CategoriesHandler) FindById(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -60,6 +78,17 @@ func (h *CategoriesHandler) FindById(c *gin.Context) {
 	c.JSON(http.StatusOK, category)
 }
 
+// Create godoc
+// @Summary      Create new category
+// @Description  Creates a new category entry
+// @Tags         categories
+// @Accept       json
+// @Produce      json
+// @Param        request body createCategoryRequest true "Create category request"
+// @Success      200 {object} gin.H "ID of the created category"
+// @Failure      400 {object} models.ApiError "Invalid input"
+// @Failure      500 {object} models.ApiError "Failed to create category"
+// @Router       /admin/categories [post]
 func (h *CategoriesHandler) Create(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -90,6 +119,19 @@ func (h *CategoriesHandler) Create(c *gin.Context) {
 	})
 }
 
+
+// Update godoc
+// @Summary      Update an existing category
+// @Description  Updates an existing category by ID
+// @Tags         categories
+// @Accept       json
+// @Produce      json
+// @Param        id path int true "Category ID"
+// @Param        request body models.Category true "Update category request"
+// @Success      200 {object} string "Success message"
+// @Failure      400 {object} models.ApiError "Invalid category ID or input"
+// @Failure      404 {object} models.ApiError "Category not found"
+// @Router       /admin/categories/{id} [put]
 func (h *CategoriesHandler) Update(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -128,6 +170,15 @@ func (h *CategoriesHandler) Update(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// Delete godoc
+// @Summary      Delete a category by ID
+// @Description  Deletes a category by its ID
+// @Tags         categories
+// @Param        id path int true "Category ID"
+// @Success      200 {object} string "Success message"
+// @Failure      400 {object} models.ApiError "Invalid category ID"
+// @Failure      500 {object} models.ApiError "Failed to delete category"
+// @Router       /admin/categories/{id} [delete]
 func (h *CategoriesHandler) Delete(c *gin.Context) {
 	logger := logger.GetLogger()
 

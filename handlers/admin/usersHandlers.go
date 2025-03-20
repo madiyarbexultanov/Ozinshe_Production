@@ -30,11 +30,23 @@ type AssignRoleRequest struct {
 	RoleID int `json:"role_id" binding:"required"`
 }
 
-
+// FindAll retrieves all users.
+// @Summary Get all users
+// @Description Retrieve a list of all users
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Success 200 {array} userResponse
+// @Failure 500 {object} models.ApiError
+// @Router /admin/users [get]
 func (h *UsersHandler) FindAll(c *gin.Context) {
 	logger := logger.GetLogger()
 
-	users, err := h.userRepo.FindAll(c)
+	filter := models.Userfilters {
+		Sort: 		c.Query("sort"),
+	}
+
+	users, err := h.userRepo.FindAll(c, filter)
 	if err != nil {
 		logger.Error("Failed to load users", zap.String("error", err.Error()))
 		c.JSON(http.StatusInternalServerError, models.NewApiError("couldn't load users"))
@@ -50,6 +62,18 @@ func (h *UsersHandler) FindAll(c *gin.Context) {
 	c.JSON(http.StatusOK, dtos)
 }
 
+// FindById retrieves a user by ID.
+// @Summary Get a user by ID
+// @Description Retrieve a user by their ID
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Success 200 {object} models.User
+// @Failure 400 {object} models.ApiError
+// @Failure 404 {object} models.ApiError
+// @Failure 500 {object} models.ApiError
+// @Router /admin/users/{id} [get]
 func (h *UsersHandler) FindById(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -73,6 +97,17 @@ func (h *UsersHandler) FindById(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// Delete deletes a user by ID.
+// @Summary Delete a user by ID
+// @Description Delete a user by their ID
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Success 200 {string} string "User deleted successfully"
+// @Failure 400 {object} models.ApiError
+// @Failure 500 {object} models.ApiError
+// @Router /admin/users/{id} [delete]
 func (h *UsersHandler) Delete(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -103,6 +138,18 @@ func (h *UsersHandler) Delete(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// AssignRole assigns a role to a user.
+// @Summary Assign a role to a user
+// @Description Assign a role to a user by their ID
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Param role body AssignRoleRequest true "Role ID"
+// @Success 200 {object} map[string]interface{} "Role assigned successfully"
+// @Failure 400 {object} models.ApiError
+// @Failure 500 {object} models.ApiError
+// @Router /admin/users/{id}/getRole [put]
 func (h *UsersHandler) AssignRole(c *gin.Context) {
 	logger := logger.GetLogger()
 

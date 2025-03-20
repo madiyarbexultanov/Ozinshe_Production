@@ -1,13 +1,312 @@
 basePath: /
 definitions:
-  handlers.SignInRequest:
+  admin.AssignRoleRequest:
+    properties:
+      role_id:
+        type: integer
+    required:
+    - role_id
+    type: object
+  admin.CreateEpisodeRequest:
+    properties:
+      number:
+        type: integer
+      seasonId:
+        type: integer
+      videoURL:
+        type: string
+    type: object
+  admin.CreateSeasonRequest:
+    properties:
+      episodes:
+        items:
+          $ref: '#/definitions/admin.CreateEpisodeRequest'
+        type: array
+      movieId:
+        type: integer
+      number:
+        type: integer
+    type: object
+  admin.UpdateEpisodeRequest:
+    properties:
+      id:
+        type: integer
+      number:
+        type: integer
+      seasonId:
+        type: integer
+      videoURL:
+        type: string
+    type: object
+  admin.UpdateSeasonRequest:
+    properties:
+      episodes:
+        items:
+          $ref: '#/definitions/admin.UpdateEpisodeRequest'
+        type: array
+      number:
+        type: integer
+    type: object
+  admin.createAgesRequest:
+    properties:
+      poster:
+        $ref: '#/definitions/multipart.FileHeader'
+      title:
+        type: string
+    type: object
+  admin.createCategoryRequest:
+    properties:
+      title:
+        type: string
+    type: object
+  admin.createMovieRequest:
+    properties:
+      ages:
+        items:
+          type: integer
+        type: array
+      categories:
+        items:
+          type: integer
+        type: array
+      description:
+        type: string
+      director:
+        type: string
+      genres:
+        items:
+          type: integer
+        type: array
+      keywords:
+        items:
+          type: string
+        type: array
+      movieTypeId:
+        type: integer
+      producer:
+        type: string
+      releaseYear:
+        type: integer
+      runtime:
+        type: integer
+      title:
+        type: string
+    type: object
+  admin.createMovieTypeRequest:
+    properties:
+      name:
+        type: string
+    type: object
+  admin.createRoleRequest:
+    properties:
+      can_edit_ages:
+        type: boolean
+      can_edit_categories:
+        type: boolean
+      can_edit_genres:
+        type: boolean
+      can_edit_projects:
+        type: boolean
+      can_edit_roles:
+        type: boolean
+      can_edit_users:
+        type: boolean
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  admin.userResponse:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  gin.H:
+    additionalProperties: {}
+    type: object
+  models.Ages:
+    properties:
+      id:
+        type: integer
+      posterUrl:
+        type: string
+      title:
+        type: string
+    type: object
+  models.ApiError:
+    properties:
+      error:
+        type: string
+    type: object
+  models.Category:
+    properties:
+      id:
+        type: integer
+      title:
+        type: string
+    type: object
+  models.Episode:
+    properties:
+      id:
+        type: integer
+      number:
+        description: Номер серии
+        type: integer
+      seasonID:
+        description: ID сезона, к которому относится эпизод
+        type: integer
+      videoURL:
+        description: Ссылка на видео
+        type: string
+    type: object
+  models.Genre:
+    properties:
+      id:
+        type: integer
+      posterUrl:
+        type: string
+      title:
+        type: string
+    type: object
+  models.Movie:
+    properties:
+      ages:
+        items:
+          $ref: '#/definitions/models.Ages'
+        type: array
+      categories:
+        items:
+          $ref: '#/definitions/models.Category'
+        type: array
+      cover:
+        type: string
+      description:
+        type: string
+      director:
+        type: string
+      genres:
+        items:
+          $ref: '#/definitions/models.Genre'
+        type: array
+      id:
+        type: integer
+      keyWords:
+        items:
+          type: string
+        type: array
+      movieType:
+        type: string
+      movieTypeId:
+        type: integer
+      producer:
+        type: string
+      releaseYear:
+        type: integer
+      runtime:
+        type: integer
+      screenshots:
+        items:
+          type: string
+        type: array
+      seasons:
+        items:
+          $ref: '#/definitions/models.Season'
+        type: array
+      title:
+        type: string
+    type: object
+  models.MovieType:
+    properties:
+      id:
+        type: integer
+      title:
+        type: string
+    type: object
+  models.Role:
+    properties:
+      canEditAges:
+        type: boolean
+      canEditCategories:
+        type: boolean
+      canEditGenres:
+        type: boolean
+      canEditProjects:
+        type: boolean
+      canEditRoles:
+        type: boolean
+      canEditUsers:
+        type: boolean
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  models.Season:
+    properties:
+      episodes:
+        description: Связь один ко многим
+        items:
+          $ref: '#/definitions/models.Episode'
+        type: array
+      id:
+        type: integer
+      movieID:
+        description: ID фильма, к которому относится сезон
+        type: integer
+      number:
+        description: Номер сезона
+        type: integer
+    type: object
+  models.User:
+    properties:
+      birthday:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      passwordHash:
+        type: string
+      phone:
+        type: string
+      roleID:
+        type: integer
+    type: object
+  multipart.FileHeader:
+    properties:
+      filename:
+        type: string
+      header:
+        $ref: '#/definitions/textproto.MIMEHeader'
+      size:
+        type: integer
+    type: object
+  public.ResetPasswordRequest:
+    properties:
+      password:
+        minLength: 8
+        type: string
+      passwordCheck:
+        minLength: 8
+        type: string
+    required:
+    - password
+    - passwordCheck
+    type: object
+  public.SignInRequest:
     properties:
       email:
         type: string
       password:
         type: string
     type: object
-  handlers.SignUpRequest:
+  public.SignUpRequest:
     properties:
       email:
         type: string
@@ -22,10 +321,33 @@ definitions:
     - password
     - passwordCheck
     type: object
-  models.ApiError:
+  public.profileResponse:
     properties:
-      error:
+      birthday:
         type: string
+      email:
+        type: string
+      name:
+        type: string
+      phone_number:
+        type: string
+    type: object
+  public.updateRequest:
+    properties:
+      birthday:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      phone_number:
+        type: string
+    type: object
+  textproto.MIMEHeader:
+    additionalProperties:
+      items:
+        type: string
+      type: array
     type: object
 host: localhost:8081
 info:
@@ -41,6 +363,1215 @@ info:
   title: Ozinshe Production
   version: "1.0"
 paths:
+  /admin/ages:
+    get:
+      description: Retrieves a list of all ages
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A list of ages
+          schema:
+            items:
+              $ref: '#/definitions/models.Ages'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Get all ages
+      tags:
+      - ages
+    post:
+      consumes:
+      - application/json
+      description: Creates a new age entry
+      parameters:
+      - description: Create age request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/admin.createAgesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ID of the created age
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Failed to save poster or create age
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Create new age
+      tags:
+      - ages
+  /admin/ages/{id}:
+    delete:
+      description: Deletes an age by its ID
+      parameters:
+      - description: Age ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: Success message
+          schema:
+            type: string
+        "400":
+          description: Invalid age ID
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Failed to delete age
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Delete an age by ID
+      tags:
+      - ages
+    get:
+      description: Retrieves an age by its ID
+      parameters:
+      - description: Age ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Age details
+          schema:
+            $ref: '#/definitions/models.Ages'
+        "400":
+          description: Invalid age ID
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Age not found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Get age by ID
+      tags:
+      - ages
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing age by ID
+      parameters:
+      - description: Age ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update age request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.Ages'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            type: string
+        "400":
+          description: Invalid age ID or input
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Age not found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Update an existing age
+      tags:
+      - ages
+  /admin/categories:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new category entry
+      parameters:
+      - description: Create category request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/admin.createCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ID of the created category
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Failed to create category
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Create new category
+      tags:
+      - categories
+  /admin/categories/{id}:
+    delete:
+      description: Deletes a category by its ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: Success message
+          schema:
+            type: string
+        "400":
+          description: Invalid category ID
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Failed to delete category
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Delete a category by ID
+      tags:
+      - categories
+    get:
+      description: Retrieves a category by its ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Category details
+          schema:
+            $ref: '#/definitions/models.Category'
+        "400":
+          description: Invalid category ID
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Category not found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Get category by ID
+      tags:
+      - categories
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing category by ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update category request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.Category'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            type: string
+        "400":
+          description: Invalid category ID or input
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Category not found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Update an existing category
+      tags:
+      - categories
+  /admin/genres:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all genres from the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Genre'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Get all genres
+      tags:
+      - genres
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create a new genre and upload a poster
+      parameters:
+      - description: Title of the genre
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Poster image
+        in: formData
+        name: poster
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: id of the created genre
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Create a new genre
+      tags:
+      - genres
+  /admin/genres/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a genre from the database by its ID
+      parameters:
+      - description: Genre ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Genre deleted successfully
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Delete a genre by ID
+      tags:
+      - genres
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a genre by its ID
+      parameters:
+      - description: Genre ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Genre'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Get genre by ID
+      tags:
+      - genres
+    put:
+      consumes:
+      - application/json
+      description: Update a genre's details, including its title and poster
+      parameters:
+      - description: Genre ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated genre data
+        in: body
+        name: genre
+        required: true
+        schema:
+          $ref: '#/definitions/models.Genre'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Genre updated successfully
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Update a genre by ID
+      tags:
+      - genres
+  /admin/movieTypes:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all movie types
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.MovieType'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Get all movie types
+      tags:
+      - MovieTypes
+    post:
+      consumes:
+      - application/json
+      description: Create a new movie type with the specified name
+      parameters:
+      - description: Movie Type Information
+        in: body
+        name: movieType
+        required: true
+        schema:
+          $ref: '#/definitions/admin.createMovieTypeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Movie Type ID
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Create a new movie type
+      tags:
+      - MovieTypes
+  /admin/movieTypes/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a movie type by its ID
+      parameters:
+      - description: Movie Type ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Movie type deleted successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Delete a movie type
+      tags:
+      - MovieTypes
+    get:
+      consumes:
+      - application/json
+      description: Get a movie type by its ID
+      parameters:
+      - description: Movie Type ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MovieType'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Get movie type by ID
+      tags:
+      - MovieTypes
+    put:
+      consumes:
+      - application/json
+      description: Update an existing movie type by its ID
+      parameters:
+      - description: Movie Type ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated Movie Type Information
+        in: body
+        name: movieType
+        required: true
+        schema:
+          $ref: '#/definitions/models.MovieType'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Movie type updated successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Update an existing movie type
+      tags:
+      - MovieTypes
+  /admin/movies:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all movies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Movie'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Get all movies
+      tags:
+      - Movies
+    post:
+      consumes:
+      - application/json
+      description: Create a new movie with the specified information
+      parameters:
+      - description: Movie information
+        in: body
+        name: movie
+        required: true
+        schema:
+          $ref: '#/definitions/admin.createMovieRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Movie ID
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Create a new movie
+      tags:
+      - Movies
+  /admin/movies/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a movie by its ID
+      parameters:
+      - description: Movie ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Movie deleted successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Delete movie
+      tags:
+      - Movies
+    get:
+      consumes:
+      - application/json
+      description: Get a movie by its ID
+      parameters:
+      - description: Movie ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Movie'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Get movie by ID
+      tags:
+      - Movies
+    patch:
+      consumes:
+      - application/json
+      description: Update an existing movie by its ID
+      parameters:
+      - description: Movie ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Movie information
+        in: body
+        name: movie
+        required: true
+        schema:
+          $ref: '#/definitions/admin.createMovieRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Movie updated successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Update movie
+      tags:
+      - Movies
+  /admin/movies/{movieId}/media:
+    patch:
+      consumes:
+      - multipart/form-data
+      description: Upload cover and screenshots for a movie
+      parameters:
+      - description: Movie ID
+        in: path
+        name: movieId
+        required: true
+        type: integer
+      - description: Cover image
+        in: formData
+        name: cover
+        required: true
+        type: file
+      - description: Screenshots
+        in: formData
+        name: screenshots
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Media added successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Add media (cover, screenshots)
+      tags:
+      - Movies
+  /admin/movies/{movieId}/seasons:
+    post:
+      consumes:
+      - application/json
+      description: Adds a new season with episodes to a movie
+      parameters:
+      - description: Movie ID
+        in: path
+        name: movieId
+        required: true
+        type: integer
+      - description: Season and episodes data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/admin.CreateSeasonRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Seasons and episodes added successfully
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Invalid movieId or payload
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Add seasons and episodes to a movie
+      tags:
+      - content
+  /admin/movies/{movieId}/seasons/{seasonId}:
+    delete:
+      consumes:
+      - application/json
+      description: Removes a season and its episodes from a movie
+      parameters:
+      - description: Movie ID
+        in: path
+        name: movieId
+        required: true
+        type: integer
+      - description: Season ID
+        in: path
+        name: seasonId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Season deleted successfully
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Invalid movieId or seasonId
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Delete a season from a movie
+      tags:
+      - content
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing season's details and episodes
+      parameters:
+      - description: Movie ID
+        in: path
+        name: movieId
+        required: true
+        type: integer
+      - description: Season ID
+        in: path
+        name: seasonId
+        required: true
+        type: integer
+      - description: Season and episode update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/admin.UpdateSeasonRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Season and episodes updated successfully
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Invalid movieId or seasonId or payload
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Season not found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Update season details
+      tags:
+      - content
+  /admin/roles:
+    get:
+      description: Get a list of all roles
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Role'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Get all roles
+      tags:
+      - Roles
+    post:
+      consumes:
+      - application/json
+      description: Create a new role with specified permissions
+      parameters:
+      - description: Role data
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/admin.createRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ID of the created role
+          schema:
+            type: integer
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Create a new role
+      tags:
+      - Roles
+  /admin/roles/{id}:
+    delete:
+      description: Delete an existing role by ID
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Delete a role
+      tags:
+      - Roles
+    get:
+      description: Get the details of a specific role by ID
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Role'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Get a role by ID
+      tags:
+      - Roles
+    put:
+      consumes:
+      - application/json
+      description: Update an existing role with new information
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated role data
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/models.Role'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Update an existing role
+      tags:
+      - Roles
+  /admin/seasons/{seasonId}/episodes/{episodeId}:
+    delete:
+      consumes:
+      - application/json
+      description: Removes an episode from a season
+      parameters:
+      - description: Episode ID
+        in: path
+        name: episodeId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Episode deleted successfully
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Invalid episodeId
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Delete an episode
+      tags:
+      - content
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing episode's details
+      parameters:
+      - description: Episode ID
+        in: path
+        name: episodeId
+        required: true
+        type: integer
+      - description: Episode update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/admin.UpdateEpisodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Episode updated successfully
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Invalid episodeId or payload
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Episode not found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Update episode details
+      tags:
+      - content
+  /admin/users:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/admin.userResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Get all users
+      tags:
+      - Users
+  /admin/users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a user by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User deleted successfully
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Delete a user by ID
+      tags:
+      - Users
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a user by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Get a user by ID
+      tags:
+      - Users
+  /admin/users/{id}/getRole:
+    put:
+      consumes:
+      - application/json
+      description: Assign a role to a user by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Role ID
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/admin.AssignRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Role assigned successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Assign a role to a user
+      tags:
+      - Users
   /auth/signIn:
     post:
       consumes:
@@ -53,7 +1584,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handlers.SignInRequest'
+          $ref: '#/definitions/public.SignInRequest'
       produces:
       - application/json
       responses:
@@ -110,7 +1641,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handlers.SignUpRequest'
+          $ref: '#/definitions/public.SignUpRequest'
       produces:
       - application/json
       responses:
@@ -133,6 +1664,127 @@ paths:
       summary: User Registration
       tags:
       - auth
+  /categories:
+    get:
+      description: Retrieves a list of all categories
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A list of categories
+          schema:
+            items:
+              $ref: '#/definitions/models.Category'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Get all categories
+      tags:
+      - categories
+  /public/profile/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a user profile by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/public.profileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Get user profile
+      tags:
+      - Public Profile
+    put:
+      consumes:
+      - application/json
+      description: Updates the details of a user profile by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Profile Data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/public.updateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Profile updated successfully
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Update user profile
+      tags:
+      - Public Profile
+  /public/profile/changepassword/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Allows a user to change their password
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Password Reset Data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/public.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password changed successfully
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Change user password
+      tags:
+      - Public Profile
 securityDefinitions:
   Bearer:
     description: Type "Bearer" followed by a space and JWT token.

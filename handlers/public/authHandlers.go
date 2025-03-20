@@ -41,15 +41,13 @@ type SignInRequest struct {
 }
 
 
-
-
 // SignUp godoc
 // @Summary      User Registration
 // @Description  Registers a new user by providing an email, password, and password confirmation
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        request body handlers.SignUpRequest true "User registration request"
+// @Param        request body public.SignUpRequest true "User registration request"
 // @Success      200 {object} object{id=int} "User successfully created"
 // @Failure      400 {object} models.ApiError "Validation error: invalid email, password mismatch, or weak password"
 // @Failure      500 {object} models.ApiError "Server error: failed to hash password or create user"
@@ -129,7 +127,7 @@ func (h *AuthHandlers) SignUp(c *gin.Context) {
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        request body handlers.SignInRequest true "User sign-in request"
+// @Param        request body public.SignInRequest true "User sign-in request"
 // @Success      200 {object} object{token=string} "JWT token successfully generated"
 // @Failure      400 {object} models.ApiError "Invalid payload"
 // @Failure      401 {object} models.ApiError "Invalid credentials: wrong email or password"

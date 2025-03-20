@@ -27,6 +27,16 @@ func (r *EpisodesRepository) Exists(c context.Context, seasonID, episodeNumber i
 	return exists, nil
 }
 
+func (r *EpisodesRepository) FindById(c context.Context, id int) (models.Episode, error) {
+	var episode models.Episode
+	row := r.db.QueryRow(c, "SELECT id, number, season_id, video_url FROM episodes WHERE id = $1", id)
+	err := row.Scan(&episode.Id, &episode.Number, &episode.SeasonID, &episode.VideoURL)
+	if err != nil {
+		return models.Episode{}, err
+	}
+	return episode, nil
+}
+
 // Создание нового эпизода (с проверкой наличия)
 func (r *EpisodesRepository) Create(c context.Context, episode models.Episode) (int, error) {
 	exists, err := r.Exists(c, episode.SeasonID, episode.Number)

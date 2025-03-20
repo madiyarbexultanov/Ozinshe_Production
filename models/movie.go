@@ -15,4 +15,12 @@ type Movie struct {
 	Seasons     []Season    
 	Cover       string
 	Screenshots []string
+	MovieTypeId int
+	MovieType	string
+}
+
+type Moviesfilters struct {
+	GenreIds	string
+	CategoryIds	string
+	TypeIds		string
 }

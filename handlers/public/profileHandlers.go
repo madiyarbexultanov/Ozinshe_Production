@@ -41,6 +41,17 @@ type ResetPasswordRequest struct {
 	PasswordCheck 	string `json:"passwordCheck" binding:"required,min=8"`
 }
 
+// UserProfile godoc
+// @Summary Get user profile
+// @Description Retrieves a user profile by ID
+// @Tags Public Profile
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Success 200 {object} profileResponse
+// @Failure 400 {object} models.ApiError
+// @Failure 404 {object} models.ApiError
+// @Router /public/profile/{id} [get]
 func (h *ProfilesHandler) UserProfile(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -70,6 +81,18 @@ func (h *ProfilesHandler) UserProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// UpdateProfile godoc
+// @Summary Update user profile
+// @Description Updates the details of a user profile by ID
+// @Tags Public Profile
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Param body body updateRequest true "Update Profile Data"
+// @Success 200 {string} string "Profile updated successfully"
+// @Failure 400 {object} models.ApiError
+// @Failure 404 {object} models.ApiError
+// @Router /public/profile/{id} [put]
 func (h *ProfilesHandler) Update(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -123,6 +146,19 @@ func (h *ProfilesHandler) Update(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// ChangePassword godoc
+// @Summary Change user password
+// @Description Allows a user to change their password
+// @Tags Public Profile
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Param body body ResetPasswordRequest true "Password Reset Data"
+// @Success 200 {string} string "Password changed successfully"
+// @Failure 400 {object} models.ApiError
+// @Failure 401 {object} models.ApiError
+// @Failure 500 {object} models.ApiError
+// @Router /public/profile/changepassword/{id} [put]
 func (h *ProfilesHandler) ChangePassword(c *gin.Context) {
 	logger := logger.GetLogger()
 

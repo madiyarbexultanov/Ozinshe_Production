@@ -2,8 +2,10 @@ package repositories
 
 import (
 	"context"
+	"fmt"
 	"ozinshe_production/models"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -15,19 +17,21 @@ func NewMoviesRepository(conn *pgxpool.Pool) *MoviesRepository {
 	return &MoviesRepository{db: conn}
 }
 
-func (r *MoviesRepository) FindById(c context.Context, id int) (models.Movie, error){
+func (r *MoviesRepository) FindById(c context.Context, id int) (models.Movie, error) {
 	sql := `
-	select 
+	SELECT 
 	m.id, m.title, m.release_year, m.runtime, m.keywords, m.description, m.director, 
 	m.producer,
 	COALESCE(m.cover, '') AS cover, 
-    COALESCE(m.screenshots, '{}'::TEXT[]) AS screenshots, 
-	g.id, g.title,
-	c.id, c.title,
-	a.id, a.title,
-	s.id, s.number, s.movie_id,
-	e.id, e.number, e.video_url, e.season_id
-	from movies m
+	COALESCE(m.screenshots, '{}'::TEXT[]) AS screenshots,
+	COALESCE(mt.title, '') AS movie_type_title,
+	g.id, COALESCE(g.title, '') AS genre_title,
+	c.id, COALESCE(c.title, '') AS category_title,
+	a.id, COALESCE(a.title, '') AS age_title,
+	COALESCE(s.id, 0) AS season_id, COALESCE(s.number, 0) AS season_number, COALESCE(s.movie_id, 0) AS season_movie_id,
+	COALESCE(e.id, 0) AS episode_id, COALESCE(e.number, 0) AS episode_number, COALESCE(e.video_url, '') AS episode_video_url, COALESCE(e.season_id, 0) AS episode_season_id
+	FROM movies m
+	LEFT JOIN movie_types mt ON mt.id = m.movie_type_id 
 	LEFT JOIN movie_genres mg ON mg.movie_id = m.id
 	LEFT JOIN genres g ON mg.genre_id = g.id
 	LEFT JOIN movie_categories mc ON mc.movie_id = m.id
@@ -35,8 +39,8 @@ func (r *MoviesRepository) FindById(c context.Context, id int) (models.Movie, er
 	LEFT JOIN movie_ages ma ON ma.movie_id = m.id
 	LEFT JOIN ages a ON ma.age_id = a.id
 	LEFT JOIN seasons s ON s.movie_id = m.id
-	LEFT  JOIN episodes e ON e.season_id = s.id
-	where m.id = $1
+	LEFT JOIN episodes e ON e.season_id = s.id
+	WHERE m.id = $1
 	`
 
 	rows, err := r.db.Query(c, sql, id)
@@ -53,15 +57,17 @@ func (r *MoviesRepository) FindById(c context.Context, id int) (models.Movie, er
 	seasonEpisodesMap := make(map[int][]models.Episode)
 
 	for rows.Next() {
-		var g models.Genre
-		var c models.Category
-		var a models.Ages
-		var s models.Season
-		var e models.Episode
+		var g 	models.Genre
+		var c 	models.Category
+		var a 	models.Ages
+		var s 	models.Season
+		var e 	models.Episode
+		var mt 	models.MovieType
 
 		err := rows.Scan(
-			&movie.Id, &movie.Title, &movie.ReleaseYear, &movie.Runtime, &movie.KeyWords, 
+			&movie.Id, &movie.Title, &movie.ReleaseYear, &movie.Runtime, &movie.KeyWords,
 			&movie.Description, &movie.Director, &movie.Producer, &movie.Cover, &movie.Screenshots,
+			&mt.Title,
 			&g.Id, &g.Title,
 			&c.Id, &c.Title,
 			&a.Id, &a.Title,
@@ -71,6 +77,8 @@ func (r *MoviesRepository) FindById(c context.Context, id int) (models.Movie, er
 		if err != nil {
 			return models.Movie{}, err
 		}
+
+		movie.MovieType = mt.Title
 
 		if g.Id != 0 {
 			genresMap[g.Id] = g
@@ -100,7 +108,7 @@ func (r *MoviesRepository) FindById(c context.Context, id int) (models.Movie, er
 		}
 	}
 
-	// Добавляем уникальные жанры, категории и возрасты
+	// Добавляем уникальные жанры, категории и возрастные ограничения
 	for _, genre := range genresMap {
 		movie.Genres = append(movie.Genres, genre)
 	}
@@ -123,19 +131,22 @@ func (r *MoviesRepository) FindById(c context.Context, id int) (models.Movie, er
 	return movie, nil
 }
 
-func (r *MoviesRepository) FindAll(c context.Context) ([]models.Movie, error) {
+
+func (r *MoviesRepository) FindAll(c context.Context, filters models.Moviesfilters) ([]models.Movie, error) {
 	sql := `
 	SELECT 
 	m.id, m.title, m.description, m.release_year, m.director, m.producer, 
 	m.runtime, m.keywords, 
 	COALESCE(m.cover, '') AS cover, 
-    COALESCE(m.screenshots, '{}'::TEXT[]) AS screenshots, 
-	g.id, g.title, 
-	c.id, c.title,
-	a.id, a.title,
-	s.id, s.number, s.movie_id,
-	e.id, e.number, e.video_url, e.season_id
+	COALESCE(m.screenshots, '{}'::TEXT[]) AS screenshots, 
+	mt.id, COALESCE(mt.title, '') AS movie_type_title,
+	g.id, COALESCE(g.title, '') AS genre_title, 
+	c.id, COALESCE(c.title, '') AS category_title,
+	a.id, COALESCE(a.title, '') AS age_title,
+	COALESCE(s.id, 0) AS season_id, COALESCE(s.number, 0) AS season_number, COALESCE(s.movie_id, 0) AS season_movie_id,
+	COALESCE(e.id, 0) AS episode_id, COALESCE(e.number, 0) AS episode_number, COALESCE(e.video_url, '') AS episode_video_url, COALESCE(e.season_id, 0) AS episode_season_id
 	FROM movies m
+	LEFT JOIN movie_types mt ON mt.id = m.movie_type_id 
 	LEFT JOIN movie_genres mg ON mg.movie_id = m.id
 	LEFT JOIN genres g ON mg.genre_id = g.id
 	LEFT JOIN movie_categories mc ON mc.movie_id = m.id
@@ -144,17 +155,34 @@ func (r *MoviesRepository) FindAll(c context.Context) ([]models.Movie, error) {
 	LEFT JOIN ages a ON ma.age_id = a.id
 	LEFT JOIN seasons s ON s.movie_id = m.id
 	LEFT JOIN episodes e ON e.season_id = s.id
+	where 1=1
 	`
 
-	rows, err := r.db.Query(c, sql)
+	params := pgx.NamedArgs{}
+
+	if filters.GenreIds != "" {
+		sql = fmt.Sprintf("%s and g.id = @genreId", sql)
+		params["genreId"] = fmt.Sprintf("%%%s%%", filters.GenreIds)
+	}
+
+	if filters.CategoryIds != "" {
+		sql = fmt.Sprintf("%s and c.id = @categoryId", sql)
+		params["categoryId"] = filters.CategoryIds
+	}
+
+	if filters.TypeIds != "" {
+		sql = fmt.Sprintf("%s and mt.id = @typeid", sql)
+		params["typeid"] = filters.CategoryIds
+	}
+	
+	rows, err := r.db.Query(c, sql, filters)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	moviesMap := make(map[int]*models.Movie)
 
-	
 	for rows.Next() {
 		var m models.Movie
 		var g models.Genre
@@ -162,29 +190,30 @@ func (r *MoviesRepository) FindAll(c context.Context) ([]models.Movie, error) {
 		var a models.Ages
 		var s models.Season
 		var e models.Episode
-	
+		var mt models.MovieType
+
 		err := rows.Scan(
-			&m.Id, &m.Title, &m.Description, &m.ReleaseYear, &m.Director, 
+			&m.Id, &m.Title, &m.Description, &m.ReleaseYear, &m.Director,
 			&m.Producer, &m.Runtime, &m.KeyWords, &m.Cover, &m.Screenshots,
+			&mt.Id, &mt.Title,
 			&g.Id, &g.Title,
 			&c.Id, &c.Title,
 			&a.Id, &a.Title,
 			&s.Id, &s.Number, &s.MovieID,
-			&e.Id, &e.Number, &e.VideoURL,  &e.SeasonID,
+			&e.Id, &e.Number, &e.VideoURL, &e.SeasonID,
 		)
+		
 		if err != nil {
 			return nil, err
 		}
-	
-		// Проверяем, есть ли фильм в map
+
 		existingMovie, exists := moviesMap[m.Id]
 		if !exists {
-			// Создаем новый фильм в map
+			m.MovieType = mt.Title
 			moviesMap[m.Id] = &m
 			existingMovie = &m
 		}
-	
-		// Добавляем жанры, категории и возрастные ограничения, избегая дубликатов
+
 		if g.Id != 0 && !containsGenre(existingMovie.Genres, g) {
 			existingMovie.Genres = append(existingMovie.Genres, g)
 		}
@@ -198,30 +227,20 @@ func (r *MoviesRepository) FindAll(c context.Context) ([]models.Movie, error) {
 			existingMovie.Seasons = append(existingMovie.Seasons, s)
 		}
 		for i, season := range existingMovie.Seasons {
-			if season.Id == s.Id {
-				// Проверяем, есть ли уже эпизод в сезоне
-				if !containsEpisode(existingMovie.Seasons[i].Episodes, e) {
-					existingMovie.Seasons[i].Episodes = append(existingMovie.Seasons[i].Episodes, e)
-				}
-				break
+			if season.Id == s.Id && !containsEpisode(existingMovie.Seasons[i].Episodes, e) {
+				existingMovie.Seasons[i].Episodes = append(existingMovie.Seasons[i].Episodes, e)
 			}
 		}
-		
 	}
-	
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-	
-	// Собираем итоговый список фильмов
+
 	movies := make([]models.Movie, 0, len(moviesMap))
 	for _, movie := range moviesMap {
 		movies = append(movies, *movie)
 	}
-	
-	
+
 	return movies, nil
 }
+
 
 func (r *MoviesRepository) Create(c context.Context, movie models.Movie) (int, error){
 	tx, err := r.db.Begin(c)
@@ -237,9 +256,9 @@ func (r *MoviesRepository) Create(c context.Context, movie models.Movie) (int, e
 	}()
 
 	var id int
-	row := tx.QueryRow(c, `insert into movies(title, release_year, runtime, keywords, description, director, producer) 
-	values($1, $2, $3, $4, $5, $6, $7) returning id`, 
-	movie.Title, movie.ReleaseYear, movie.Runtime, movie.KeyWords, movie.Description, movie.Director, movie.Producer)
+	row := tx.QueryRow(c, `insert into movies(title, release_year, runtime, keywords, description, director, producer, movie_type_id) 
+	values($1, $2, $3, $4, $5, $6, $7, $8) returning id`, 
+	movie.Title, movie.ReleaseYear, movie.Runtime, movie.KeyWords, movie.Description, movie.Director, movie.Producer, movie.MovieTypeId)
 
 	err = row.Scan(&id)
 	if err != nil {
@@ -273,6 +292,116 @@ func (r *MoviesRepository) Create(c context.Context, movie models.Movie) (int, e
 	}
 
 	return id, nil
+}
+
+func (r *MoviesRepository) Update(c context.Context, movie models.Movie) error {
+	tx, err := r.db.Begin(c)
+	if err != nil {
+		return err
+	}
+
+	// Гарантируем Rollback, если ошибка возникнет до Commit
+	defer func() {
+		if err != nil {
+			tx.Rollback(c)
+		}
+	}()
+
+	// Обновление данных фильма
+	_, err = tx.Exec(c, `
+		UPDATE movies
+		SET title = $1, release_year = $2, runtime = $3, keywords = $4, description = $5, 
+			director = $6, producer = $7, movie_type_id = $8
+		WHERE id = $9
+	`, movie.Title, movie.ReleaseYear, movie.Runtime, movie.KeyWords, movie.Description, 
+		movie.Director, movie.Producer, movie.MovieTypeId, movie.Id)
+	if err != nil {
+		return err
+	}
+
+	// Обновление жанров
+	_, err = tx.Exec(c, `DELETE FROM movie_genres WHERE movie_id = $1`, movie.Id)
+	if err != nil {
+		return err
+	}
+	for _, genre := range movie.Genres {
+		_, err = tx.Exec(c, "INSERT INTO movie_genres(movie_id, genre_id) VALUES($1, $2)", movie.Id, genre.Id)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Обновление категорий
+	_, err = tx.Exec(c, `DELETE FROM movie_categories WHERE movie_id = $1`, movie.Id)
+	if err != nil {
+		return err
+	}
+	for _, category := range movie.Categories {
+		_, err = tx.Exec(c, "INSERT INTO movie_categories(movie_id, category_id) VALUES($1, $2)", movie.Id, category.Id)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Обновление возрастных ограничений
+	_, err = tx.Exec(c, `DELETE FROM movie_ages WHERE movie_id = $1`, movie.Id)
+	if err != nil {
+		return err
+	}
+	for _, age := range movie.Ages {
+		_, err = tx.Exec(c, "INSERT INTO movie_ages(movie_id, age_id) VALUES($1, $2)", movie.Id, age.Id)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = tx.Commit(c)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *MoviesRepository) Delete(c context.Context, movieID int) error {
+	tx, err := r.db.Begin(c)
+	if err != nil {
+		return err
+	}
+
+	// Гарантируем Rollback, если ошибка возникнет до Commit
+	defer func() {
+		if err != nil {
+			tx.Rollback(c)
+		}
+	}()
+
+	// Удаление связей с жанрами, категориями и возрастными ограничениями
+	_, err = tx.Exec(c, `DELETE FROM movie_genres WHERE movie_id = $1`, movieID)
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(c, `DELETE FROM movie_categories WHERE movie_id = $1`, movieID)
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(c, `DELETE FROM movie_ages WHERE movie_id = $1`, movieID)
+	if err != nil {
+		return err
+	}
+
+	// Удаление самого фильма
+	_, err = tx.Exec(c, `DELETE FROM movies WHERE id = $1`, movieID)
+	if err != nil {
+		return err
+	}
+
+	err = tx.Commit(c)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *MoviesRepository) UpdateCoverAndScreenshots(c context.Context, movieID int, cover string, screenshots []string) error {
@@ -347,3 +476,4 @@ func containsEpisode(episodes []models.Episode, e models.Episode) bool {
 	}
 	return false
 }
+

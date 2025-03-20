@@ -24,6 +24,15 @@ type createGenresRequest struct {
 	Poster *multipart.FileHeader `form:"poster"`
 }
 
+// FindAll godoc
+// @Summary Get all genres
+// @Description Retrieve all genres from the database
+// @Tags genres
+// @Accept json
+// @Produce json
+// @Success 200 {array} models.Genre
+// @Failure 500 {object} models.ApiError
+// @Router /admin/genres [get]
 func (h *GenresHandler) FindAll(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -38,6 +47,17 @@ func (h *GenresHandler) FindAll(c *gin.Context) {
 	c.JSON(http.StatusOK, genres)
 }
 
+// FindById godoc
+// @Summary Get genre by ID
+// @Description Retrieve a genre by its ID
+// @Tags genres
+// @Accept json
+// @Produce json
+// @Param id path int true "Genre ID"
+// @Success 200 {object} models.Genre
+// @Failure 400 {object} models.ApiError
+// @Failure 404 {object} models.ApiError
+// @Router /admin/genres/{id} [get]
 func (h *GenresHandler) FindById(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -60,6 +80,18 @@ func (h *GenresHandler) FindById(c *gin.Context) {
 	c.JSON(http.StatusOK, genre)
 }
 
+// Create godoc
+// @Summary Create a new genre
+// @Description Create a new genre and upload a poster
+// @Tags genres
+// @Accept multipart/form-data
+// @Produce json
+// @Param title formData string true "Title of the genre"
+// @Param poster formData file true "Poster image"
+// @Success 200 {object} map[string]int "id of the created genre"
+// @Failure 400 {object} models.ApiError
+// @Failure 500 {object} models.ApiError
+// @Router /admin/genres [post]
 func (h *GenresHandler) Create(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -96,6 +128,18 @@ func (h *GenresHandler) Create(c *gin.Context) {
 	})
 }
 
+// Update godoc
+// @Summary Update a genre by ID
+// @Description Update a genre's details, including its title and poster
+// @Tags genres
+// @Accept json
+// @Produce json
+// @Param id path int true "Genre ID"
+// @Param genre body models.Genre true "Updated genre data"
+// @Success 200 {string} string "Genre updated successfully"
+// @Failure 400 {object} models.ApiError
+// @Failure 404 {object} models.ApiError
+// @Router /admin/genres/{id} [put]
 func (h *GenresHandler) Update(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -133,6 +177,17 @@ func (h *GenresHandler) Update(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// Delete godoc
+// @Summary Delete a genre by ID
+// @Description Delete a genre from the database by its ID
+// @Tags genres
+// @Accept json
+// @Produce json
+// @Param id path int true "Genre ID"
+// @Success 200 {string} string "Genre deleted successfully"
+// @Failure 400 {object} models.ApiError
+// @Failure 404 {object} models.ApiError
+// @Router /admin/genres/{id} [delete]
 func (h *GenresHandler) Delete(c *gin.Context) {
 	logger := logger.GetLogger()
 

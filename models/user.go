@@ -11,3 +11,7 @@ type User struct {
 	Birthday     time.Time
 	RoleID       int
 }
+
+type Userfilters struct {
+	Sort		string
+}

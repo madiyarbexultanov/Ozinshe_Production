@@ -81,21 +81,28 @@ func main() {
 	})
 
 	moviesRepository := repositories.NewMoviesRepository(conn)
+	recommendationsRepository := repositories.NewRecommendationsRepository(conn)
 	seasonsRepository := repositories.NewSeasonsRepository(conn)
 	episodessRepository := repositories.NewEpisodesRepository(conn)
+	movieTypesRepository := repositories.NewMovieTypesRepository(conn)
 	usersRepository := repositories.NewUsersRepository(conn)
 	agesRepository := repositories.NewAgesRepository(conn)
 	genresRepository := repositories.NewGenresRepository(conn)
 	categoriesRepository := repositories.NewCategoriesRepository(conn)
 	rolesRepository := repositories.NewRolesRepository(conn)
+	SearchRepository := repositories.NewSearchRepository(conn)
 
 
-	moviesHandler := admin.NewMoviesHandler(moviesRepository, genresRepository,  agesRepository, categoriesRepository, seasonsRepository, episodessRepository)
+	moviesHandler := admin.NewMoviesHandler(moviesRepository, movieTypesRepository, genresRepository,  agesRepository, categoriesRepository)
+	recommendationsHandler := admin.NewRecommendationsHandler(recommendationsRepository)
+	contetnsHandler := admin.NewContentsHandler(seasonsRepository, episodessRepository)
 	usersHandler := admin.NewUsersHandler(usersRepository)
+	movieTypesHandler := admin.NewMovieTypesHandler(movieTypesRepository)
 	agesHandler := admin.NewAgesHandler(agesRepository)
 	genresHandler := admin.NewGenresHandler(genresRepository)
 	categoriesHandler := admin.NewCategoriesHandler(categoriesRepository)
 	rolesHandler := admin.NewRolesHandler(rolesRepository)
+	searchHandler := admin.NewSearchHandler(SearchRepository)
 
 
 	authHandler := public.NewAuthHandlers(usersRepository)
@@ -118,9 +125,27 @@ func main() {
 	permitted.GET("/admin/movies", moviesHandler.FindAll)
 	permitted.GET("/admin/movies/:id", moviesHandler.FindById)
 	permitted.POST("/admin/movies", moviesHandler.Create)
-	permitted.POST("/admin/movies/:movieId/seasons", moviesHandler.AddSeasonsAndEpisodes)
+	permitted.PUT("/admin/movies/:id", moviesHandler.Update)
 	permitted.PATCH("/admin/movies/:movieId/media", moviesHandler.AddMedia)
-	
+	permitted.DELETE("/admin/movies/:id", moviesHandler.Delete)
+
+	permitted.POST("/admin/movies/:movieId/seasons", contetnsHandler.AddSeasonsAndEpisodes)
+	permitted.PUT("/admin/movies/:movieId/seasons/:seasonId", contetnsHandler.UpdateSeason)
+	permitted.PUT("/admin/seasons/:seasonId/episodes/:episodeId", contetnsHandler.UpdateEpisode)
+	permitted.DELETE("/admin/movies/:movieId/seasons/:seasonId", contetnsHandler.DeleteSeason)
+	permitted.DELETE("/admin/seasons/:seasonId/episodes/:episodeId", contetnsHandler.DeleteEpisode)
+
+	permitted.GET("/admin/recommendations", recommendationsHandler.FindAll)
+	permitted.GET("/admin/recommendations/:id", recommendationsHandler.FindById)
+	permitted.POST("/admin/recommendations", recommendationsHandler.Create)
+	permitted.PATCH("/admin/recommendations/:id", recommendationsHandler.Delete)
+
+	permitted.GET("/admin/movieTypes", movieTypesHandler.FindAll)
+	permitted.GET("/admin/movieTypes/:id", movieTypesHandler.FindById)
+	permitted.POST("/admin/movieTypes", movieTypesHandler.Create)
+	permitted.PUT("/admin/movieTypes/:id", movieTypesHandler.Update)
+	permitted.DELETE("/admin/movieTypes/:id", movieTypesHandler.Delete)
+
 	permitted.GET("/admin/categories", categoriesHandler.FindAll)
 	permitted.GET("/admin/categories/:id", categoriesHandler.FindById)
 	permitted.POST("/admin/categories", categoriesHandler.Create)
@@ -149,6 +174,8 @@ func main() {
 	permitted.POST("/admin/ages", agesHandler.Create)
 	permitted.PUT("/admin/ages/:id", agesHandler.Update)
 	permitted.DELETE("/admin/ages/:id", agesHandler.Delete)
+
+	permitted.GET("/admin/search", searchHandler.SearchAll)
 
 	unauthorized := r.Group("")
 	unauthorized.POST("/public/auth/signUp", authHandler.SignUp)

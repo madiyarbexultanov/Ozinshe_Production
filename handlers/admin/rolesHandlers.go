@@ -29,6 +29,13 @@ type createRoleRequest struct {
 	CanEditAges       bool   `json:"can_edit_ages"`
 }
 
+// @Summary Get all roles
+// @Description Get a list of all roles
+// @Tags Roles
+// @Produce json
+// @Success 200 {array} models.Role
+// @Failure 500 {object} models.ApiError
+// @Router /admin/roles [get]
 func (h *RolesHandler) FindAll(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -43,6 +50,16 @@ func (h *RolesHandler) FindAll(c *gin.Context) {
 	c.JSON(http.StatusOK, roles)
 }
 
+// @Summary Get a role by ID
+// @Description Get the details of a specific role by ID
+// @Tags Roles
+// @Produce json
+// @Param id path int true "Role ID"
+// @Success 200 {object} models.Role
+// @Failure 400 {object} models.ApiError
+// @Failure 404 {object} models.ApiError
+// @Failure 500 {object} models.ApiError
+// @Router /admin/roles/{id} [get]
 func (h *RolesHandler) FindById(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -65,6 +82,16 @@ func (h *RolesHandler) FindById(c *gin.Context) {
 	c.JSON(http.StatusOK, role)
 }
 
+// @Summary Create a new role
+// @Description Create a new role with specified permissions
+// @Tags Roles
+// @Accept json
+// @Produce json
+// @Param role body createRoleRequest true "Role data"
+// @Success 200 {object} int "ID of the created role"
+// @Failure 400 {object} models.ApiError
+// @Failure 500 {object} models.ApiError
+// @Router /admin/roles [post]
 func (h *RolesHandler) Create(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -94,9 +121,21 @@ func (h *RolesHandler) Create(c *gin.Context) {
 	}
 
 	logger.Info("Role created successfully", zap.Int("id", id), zap.String("name", createRole.Name))
-	c.JSON(http.StatusOK, gin.H{"id": id})
+	c.JSON(http.StatusOK, id)
 }
 
+// @Summary Update an existing role
+// @Description Update an existing role with new information
+// @Tags Roles
+// @Accept json
+// @Produce json
+// @Param id path int true "Role ID"
+// @Param role body models.Role true "Updated role data"
+// @Success 200 {string} string "OK"
+// @Failure 400 {object} models.ApiError
+// @Failure 404 {object} models.ApiError
+// @Failure 500 {object} models.ApiError
+// @Router /admin/roles/{id} [put]
 func (h *RolesHandler) Update(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -134,6 +173,16 @@ func (h *RolesHandler) Update(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// @Summary Delete a role
+// @Description Delete an existing role by ID
+// @Tags Roles
+// @Produce json
+// @Param id path int true "Role ID"
+// @Success 200 {string} string "OK"
+// @Failure 400 {object} models.ApiError
+// @Failure 404 {object} models.ApiError
+// @Failure 500 {object} models.ApiError
+// @Router /admin/roles/{id} [delete]
 func (h *RolesHandler) Delete(c *gin.Context) {
 	logger := logger.GetLogger()
 

@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"fmt"
 	"ozinshe_production/models"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -15,8 +16,14 @@ func NewUsersRepository(conn *pgxpool.Pool) *UsersRepository {
 	return &UsersRepository{db: conn}
 }
 
-func (r *UsersRepository) FindAll(c context.Context) ([]models.User, error)  {
-	rows, err := r.db.Query(c, "select id, name, email, phone_number, birth_date from users")
+func (r *UsersRepository) FindAll(c context.Context, filters models.Userfilters) ([]models.User, error)  {
+	sql := "select id, name, email, phone_number, birth_date from users where 1=1"
+
+	if filters.Sort != "" {
+		sql = fmt.Sprintf("%s and created_at ilike `%%%s%%`", sql, filters.Sort)
+	}
+
+	rows, err := r.db.Query(c, sql, filters)
 	if err != nil {
 		return nil, err
 	}
