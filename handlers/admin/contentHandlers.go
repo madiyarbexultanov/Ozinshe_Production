@@ -17,7 +17,7 @@ type ContentHandler struct {
 }
 
 type CreateSeasonRequest struct {
-	MovieID 		int 					`json:"movieId"`
+	MovieID 		int 					`json:"id"`
 	Number          int         			`json:"number"`
 	Episodes        []CreateEpisodeRequest  `json:"episodes"`
 }
@@ -52,20 +52,20 @@ func NewContentsHandler(seasonsRepo *repositories.SeasonsRepository,
 // @Tags         content
 // @Accept       json
 // @Produce      json
-// @Param        movieId  path      int                              true  "Movie ID"
+// @Param        id  path      int                              true  "Movie ID"
 // @Param        request  body      admin.CreateSeasonRequest     true  "Season and episodes data"
 // @Success      200      {object}  object{message=string}           "Seasons and episodes added successfully"
-// @Failure      400      {object}  models.ApiError                 "Invalid movieId or payload"
+// @Failure      400      {object}  models.ApiError                 "Invalid movie id or payload"
 // @Failure      500      {object}  models.ApiError                 "Internal server error"
-// @Router       /admin/movies/{movieId}/seasons [post]
+// @Router       /admin/movies/{Id}/seasons [post]
 func (h *ContentHandler) AddSeasonsAndEpisodes(c *gin.Context) {
 	logger := logger.GetLogger()
 
-	// Получаем movieId
-	movieID, err := strconv.Atoi(c.Param("movieId"))
+	// Получаем movie Id
+	movieID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		logger.Error("Invalid movieId", zap.Error(err))
-		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid movieId"))
+		logger.Error("Invalid movie id", zap.Error(err))
+		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid movie id"))
 		return
 	}
 
@@ -105,21 +105,21 @@ func (h *ContentHandler) AddSeasonsAndEpisodes(c *gin.Context) {
 // @Tags         content
 // @Accept       json
 // @Produce      json
-// @Param        movieId   path      int                          true  "Movie ID"
+// @Param        Id   path      int                          true  "Movie ID"
 // @Param        seasonId  path      int                          true  "Season ID"
 // @Param        request   body      admin.UpdateSeasonRequest true  "Season and episode update data"
 // @Success      200       {object}  object{message=string}       "Season and episodes updated successfully"
-// @Failure      400       {object}  models.ApiError             "Invalid movieId or seasonId or payload"
+// @Failure      400       {object}  models.ApiError             "Invalid movie Id or seasonId or payload"
 // @Failure      404       {object}  models.ApiError             "Season not found"
 // @Failure      500       {object}  models.ApiError             "Internal server error"
-// @Router       /admin/movies/{movieId}/seasons/{seasonId} [put]
+// @Router       /admin/movies/{Id}/seasons/{seasonId} [put]
 func (h *ContentHandler) UpdateSeason(c *gin.Context) {
 	logger := logger.GetLogger()
 
-	movieID, err := strconv.Atoi(c.Param("movieId"))
+	movieID, err := strconv.Atoi(c.Param("Id"))
 	if err != nil {
-		logger.Error("Invalid movieId", zap.Error(err))
-		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid movieId"))
+		logger.Error("Invalid movie id", zap.Error(err))
+		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid movie Id"))
 		return
 	}
 
@@ -197,20 +197,20 @@ func (h *ContentHandler) UpdateSeason(c *gin.Context) {
 // @Tags         content
 // @Accept       json
 // @Produce      json
-// @Param        movieId   path      int   true  "Movie ID"
+// @Param        Id   path      int   true  "Movie ID"
 // @Param        seasonId  path      int   true  "Season ID"
 // @Success      200       {object}  object{message=string} "Season deleted successfully"
-// @Failure      400       {object}  models.ApiError        "Invalid movieId or seasonId"
+// @Failure      400       {object}  models.ApiError        "Invalid movie id or seasonId"
 // @Failure      500       {object}  models.ApiError        "Internal server error"
-// @Router       /admin/movies/{movieId}/seasons/{seasonId} [delete]
+// @Router       /admin/movies/{Id}/seasons/{seasonId} [delete]
 func (h *ContentHandler) DeleteSeason(c *gin.Context) {
 	logger := logger.GetLogger()
 
-	// Получаем movieId и seasonId из параметров URL
-	movieID, err := strconv.Atoi(c.Param("movieId"))
+	// Получаем movie Id и seasonId из параметров URL
+	movieID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		logger.Error("Invalid movieId", zap.Error(err))
-		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid movieId"))
+		logger.Error("Invalid movie id", zap.Error(err))
+		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid movie id"))
 		return
 	}
 

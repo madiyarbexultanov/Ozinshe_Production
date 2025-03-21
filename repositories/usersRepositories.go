@@ -17,13 +17,13 @@ func NewUsersRepository(conn *pgxpool.Pool) *UsersRepository {
 }
 
 func (r *UsersRepository) FindAll(c context.Context, filters models.Userfilters) ([]models.User, error)  {
-	sql := "select id, name, email, phone_number, birth_date from users where 1=1"
+	sql := "select id, name, email from users where 1=1"
 
 	if filters.Sort != "" {
-		sql = fmt.Sprintf("%s and created_at ilike `%%%s%%`", sql, filters.Sort)
+		sql = fmt.Sprintf("%s ORDER BY created_at %s", sql, filters.Sort)
 	}
 
-	rows, err := r.db.Query(c, sql, filters)
+	rows, err := r.db.Query(c, sql)
 	if err != nil {
 		return nil, err
 	}
@@ -44,8 +44,8 @@ func (r *UsersRepository) FindAll(c context.Context, filters models.Userfilters)
 
 func (r *UsersRepository) FindById(c context.Context, id int) (models.User, error)  {
 	var user models.User
-	row := r.db.QueryRow(c, "select id, name, email, role_id from users where id = $1", id)
-	err := row.Scan(&user.Id, &user.Name, &user.Email, &user.RoleID)
+	row := r.db.QueryRow(c, "select id, name, email, role_id, phone_number, birth_date from users where id = $1", id)
+	err := row.Scan(&user.Id, &user.Name, &user.Email, &user.RoleID, &user.Phone, &user.Birthday)
 	if err != nil {
 		return models.User{}, err
 	}
