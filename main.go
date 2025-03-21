@@ -97,7 +97,9 @@ func main() {
 	categoriesRepository := repositories.NewCategoriesRepository(conn)
 	rolesRepository := repositories.NewRolesRepository(conn)
 	searchRepository  := repositories.NewSearchRepository(conn)
+	mediaRepository := repositories.NewMediaRepository(conn)
 
+	homepageRepository := repositories.NewHomepageRepository(conn)
 
 	moviesHandler := admin.NewMoviesHandler(moviesRepository, movieTypesRepository, genresRepository,  agesRepository, categoriesRepository)
 	recommendationsHandler := admin.NewRecommendationsHandler(recommendationsRepository)
@@ -108,8 +110,10 @@ func main() {
 	genresHandler := admin.NewGenresHandler(genresRepository)
 	categoriesHandler := admin.NewCategoriesHandler(categoriesRepository)
 	rolesHandler := admin.NewRolesHandler(rolesRepository)
-	searchHandler := admin.NewSearchHandler(searchRepository )
+	searchHandler := admin.NewSearchHandler(searchRepository)
+	mediaHandler := admin.NewMediaHandler(mediaRepository)
 
+	HomepageHandler := public.NewHomepageHandler(homepageRepository)
 
 	authHandler := public.NewAuthHandlers(usersRepository)
 	profilesHandler := public.NewProfilesHandler(usersRepository)
@@ -121,6 +125,8 @@ func main() {
 	authorized.GET("/public/profile/:id", profilesHandler.UserProfile)
 	authorized.PUT("/public/profile/:id", profilesHandler.Update)
 	authorized.PUT("/public/profile/changepassword/:id", profilesHandler.ChangePassword)
+
+	authorized.GET("/public/homepage", HomepageHandler.GetMainScreen)
 
 	authorized.POST("/public/auth/signOut", authHandler.SignOut)
 
@@ -135,7 +141,6 @@ func main() {
 		movies.POST("", moviesHandler.Create)
 		movies.GET("/:id", moviesHandler.FindById)
 		movies.PUT("/:id", moviesHandler.Update)
-		movies.PATCH("/:id/media", moviesHandler.AddMedia)
 		movies.DELETE("/:id", moviesHandler.Delete)
 	
 		seasons := movies.Group("/:id/seasons")
@@ -145,13 +150,23 @@ func main() {
 			seasons.DELETE("/:seasonId", contentsHandler.DeleteSeason)
 		}
 	}
-	
+
 	// Сезоны и эпизоды
 	seasons := permitted.Group("/admin/seasons")
 	{
 		seasons.PUT("/:seasonId/episodes/:episodeId", contentsHandler.UpdateEpisode)
 		seasons.DELETE("/:seasonId/episodes/:episodeId", contentsHandler.DeleteEpisode)
 	}
+
+	// Обложка и Скриншоты
+	media := permitted.Group("/admin/media")
+	{
+		media.GET("/movies/:id", mediaHandler.GetMovieMedia)       
+		media.PATCH("/movies/:id", mediaHandler.UploadMovieMedia)             
+		media.POST("/movies/:id/media", mediaHandler.UploadSingleMovieMedia) 
+		media.DELETE("/movies/:id/media", mediaHandler.DeleteMovieMedia)  
+	}
+	
 	
 	// Рекомендации
 	recommendations := permitted.Group("/admin/recommendations")

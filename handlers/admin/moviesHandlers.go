@@ -1,7 +1,6 @@
 package admin
 
 import (
-	"mime/multipart"
 	"net/http"
 	"ozinshe_production/logger"
 	"ozinshe_production/models"
@@ -32,11 +31,6 @@ type createMovieRequest struct {
 	Director 		string					`json:"director"`
 	Producer 		string					`json:"producer"`
 	MovieTypeId     int             		`json:"movieTypeId"`
-}
-
-type addMediaRequest struct {
-	Cover  		*multipart.FileHeader       `form:"cover"`
-	Screenshots []*multipart.FileHeader 	`form:"screenshots"`
 }
 
 func NewMoviesHandler(moviesRepo *repositories.MoviesRepository, 
@@ -347,68 +341,68 @@ func (h *MoviesHandler) Delete(c *gin.Context) {
 // @Failure 404 {object} models.ApiError
 // @Failure 500 {object} models.ApiError
 // @Router /admin/movies/{movieId}/media [patch]
-func (h *MoviesHandler) AddMedia(c *gin.Context) {
-	logger := logger.GetLogger()
+// func (h *MoviesHandler) AddMedia(c *gin.Context) {
+// 	logger := logger.GetLogger()
 
-	// Получаем ID фильма из параметров URL
-	idStr := c.Param("movieId")
-	logger.Info("Received movie id", zap.String("movieId", idStr))
-	movieId, err := strconv.Atoi(idStr)
-	if err != nil {
-		logger.Error("Invalid movie id", zap.String("movieId", idStr), zap.Error(err))
-		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid movie id"))
-		return
-	}
+// 	// Получаем ID фильма из параметров URL
+// 	idStr := c.Param("movieId")
+// 	logger.Info("Received movie id", zap.String("movieId", idStr))
+// 	movieId, err := strconv.Atoi(idStr)
+// 	if err != nil {
+// 		logger.Error("Invalid movie id", zap.String("movieId", idStr), zap.Error(err))
+// 		c.JSON(http.StatusBadRequest, models.NewApiError("Invalid movie id"))
+// 		return
+// 	}
 
-	// Проверяем, существует ли фильм
-	movie, err := h.moviesRepo.FindById(c, movieId)
-	if err != nil {
-		logger.Error("Movie not found", zap.Int("movieId", movieId), zap.Error(err))
-		c.JSON(http.StatusNotFound, models.NewApiError("Movie not found"))
-		return
-	}
+// 	// Проверяем, существует ли фильм
+// 	movie, err := h.moviesRepo.FindById(c, movieId)
+// 	if err != nil {
+// 		logger.Error("Movie not found", zap.Int("movieId", movieId), zap.Error(err))
+// 		c.JSON(http.StatusNotFound, models.NewApiError("Movie not found"))
+// 		return
+// 	}
 
-	// Используем структуру addMediaRequest для парсинга данных
-	var request addMediaRequest
-	if err := c.ShouldBind(&request); err != nil {
-		logger.Error("Failed to bind data", zap.Error(err))
-		c.JSON(http.StatusBadRequest, models.NewApiError("Failed to bind data"))
-		return
-	}
+// 	// Используем структуру addMediaRequest для парсинга данных
+// 	var request addMediaRequest
+// 	if err := c.ShouldBind(&request); err != nil {
+// 		logger.Error("Failed to bind data", zap.Error(err))
+// 		c.JSON(http.StatusBadRequest, models.NewApiError("Failed to bind data"))
+// 		return
+// 	}
 
-	// Обрабатываем загрузку обложки
-	if request.Cover != nil {
-		filename, err := savePoster(c, request.Cover)
-		if err != nil {
-			logger.Error("Couldn't save cover", zap.Error(err))
-			c.JSON(http.StatusInternalServerError, models.NewApiError("Couldn't save cover"))
-			return
-		}
-		movie.Cover = filename
-		logger.Info("Cover saved successfully", zap.String("filename", filename))
-	}
+// 	// Обрабатываем загрузку обложки
+// 	if request.Cover != nil {
+// 		filename, err := savePoster(c, request.Cover)
+// 		if err != nil {
+// 			logger.Error("Couldn't save cover", zap.Error(err))
+// 			c.JSON(http.StatusInternalServerError, models.NewApiError("Couldn't save cover"))
+// 			return
+// 		}
+// 		movie.Cover = filename
+// 		logger.Info("Cover saved successfully", zap.String("filename", filename))
+// 	}
 
-	// Обрабатываем загрузку скриншотов
-	var screenshotFilenames []string
-	for _, screenshot := range request.Screenshots {
-		filename, err := savePoster(c, screenshot)
-		if err != nil {
-			logger.Error("Couldn't save screenshot", zap.Error(err))
-			c.JSON(http.StatusInternalServerError, models.NewApiError("Couldn't save screenshot"))
-			return
-		}
-		screenshotFilenames = append(screenshotFilenames, filename)
-		logger.Info("Screenshot saved successfully", zap.String("filename", filename))
-	}
+// 	// Обрабатываем загрузку скриншотов
+// 	var screenshotFilenames []string
+// 	for _, screenshot := range request.Screenshots {
+// 		filename, err := savePoster(c, screenshot)
+// 		if err != nil {
+// 			logger.Error("Couldn't save screenshot", zap.Error(err))
+// 			c.JSON(http.StatusInternalServerError, models.NewApiError("Couldn't save screenshot"))
+// 			return
+// 		}
+// 		screenshotFilenames = append(screenshotFilenames, filename)
+// 		logger.Info("Screenshot saved successfully", zap.String("filename", filename))
+// 	}
 
-	// Обновляем фильм в БД
-	err = h.moviesRepo.UpdateCoverAndScreenshots(c, movieId, movie.Cover, screenshotFilenames)
-	if err != nil {
-		logger.Error("Couldn't update movie", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, models.NewApiError("Couldn't update movie"))
-		return
-	}
+// 	// Обновляем фильм в БД
+// 	err = h.moviesRepo.UpdateCoverAndScreenshots(c, movieId, movie.Cover, screenshotFilenames)
+// 	if err != nil {
+// 		logger.Error("Couldn't update movie", zap.Error(err))
+// 		c.JSON(http.StatusInternalServerError, models.NewApiError("Couldn't update movie"))
+// 		return
+// 	}
 
-	logger.Info("Media has been successfully added", zap.Int("movieId", movieId))
-	c.JSON(http.StatusOK, gin.H{"message": "Media has been successfully added"})
-}
+// 	logger.Info("Media has been successfully added", zap.Int("movieId", movieId))
+// 	c.JSON(http.StatusOK, gin.H{"message": "Media has been successfully added"})
+// }

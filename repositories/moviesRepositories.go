@@ -66,7 +66,7 @@ func (r *MoviesRepository) FindById(c context.Context, id int) (models.Movie, er
 
 		err := rows.Scan(
 			&movie.Id, &movie.Title, &movie.ReleaseYear, &movie.Runtime, &movie.KeyWords,
-			&movie.Description, &movie.Director, &movie.Producer, &movie.Cover, &movie.Screenshots,
+			&movie.Description, &movie.Director, &movie.Producer, &movie.Media.Cover, &movie.Media.Screenshots,
 			&mt.Title,
 			&g.Id, &g.Title,
 			&c.Id, &c.Title,
@@ -194,7 +194,7 @@ func (r *MoviesRepository) FindAll(c context.Context, filters models.Moviesfilte
 
 		err := rows.Scan(
 			&m.Id, &m.Title, &m.Description, &m.ReleaseYear, &m.Director,
-			&m.Producer, &m.Runtime, &m.KeyWords, &m.Cover, &m.Screenshots,
+			&m.Producer, &m.Runtime, &m.KeyWords, &m.Media.Cover, &m.Media.Screenshots,
 			&mt.Id, &mt.Title,
 			&g.Id, &g.Title,
 			&c.Id, &c.Title,
@@ -404,31 +404,31 @@ func (r *MoviesRepository) Delete(c context.Context, movieID int) error {
 	return nil
 }
 
-func (r *MoviesRepository) UpdateCoverAndScreenshots(c context.Context, movieID int, cover string, screenshots []string) error {
-	// Обновление Cover
-	_, err := r.db.Exec(c, `
-		UPDATE movies 
-		SET cover = $1 
-		WHERE id = $2
-	`, cover, movieID)
-	if err != nil {
-		return err
-	}
+// func (r *MoviesRepository) UpdateCoverAndScreenshots(c context.Context, movieID int, cover string, screenshots []string) error {
+// 	// Обновление Cover
+// 	_, err := r.db.Exec(c, `
+// 		UPDATE movies 
+// 		SET cover = $1 
+// 		WHERE id = $2
+// 	`, cover, movieID)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	// Обновление Screenshots (если они переданы)
-	if len(screenshots) > 0 {
-		// Для простоты, перезаписываем все screenshots
-		_, err := r.db.Exec(c, `
-			UPDATE movies 
-			SET screenshots = $1 
-			WHERE id = $2
-		`, screenshots, movieID)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
+// 	// Обновление Screenshots (если они переданы)
+// 	if len(screenshots) > 0 {
+// 		// Для простоты, перезаписываем все screenshots
+// 		_, err := r.db.Exec(c, `
+// 			UPDATE movies 
+// 			SET screenshots = $1 
+// 			WHERE id = $2
+// 		`, screenshots, movieID)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+// 	return nil
+// }
 
 
 

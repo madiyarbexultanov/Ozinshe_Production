@@ -13,10 +13,9 @@ type Movie struct {
 	Director	string
 	Producer	string
 	Seasons     []Season    
-	Cover       string
-	Screenshots []string
 	MovieTypeId int
 	MovieType	string
+	Media       MovieMedia
 }
 
 type Moviesfilters struct {
