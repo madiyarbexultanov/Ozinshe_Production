@@ -162,7 +162,7 @@ func (r *MoviesRepository) FindAll(c context.Context, filters models.Moviesfilte
 
 	if filters.GenreIds != "" {
 		sql = fmt.Sprintf("%s and g.id = @genreId", sql)
-		params["genreId"] = fmt.Sprintf("%%%s%%", filters.GenreIds)
+		params["genreId"] = filters.GenreIds
 	}
 
 	if filters.CategoryIds != "" {
@@ -172,7 +172,12 @@ func (r *MoviesRepository) FindAll(c context.Context, filters models.Moviesfilte
 
 	if filters.TypeIds != "" {
 		sql = fmt.Sprintf("%s and mt.id = @typeid", sql)
-		params["typeid"] = filters.CategoryIds
+		params["typeid"] = filters.TypeIds
+	}
+
+	if filters.AgeIds != "" {
+		sql = fmt.Sprintf("%s and a.id = @ageId", sql)
+		params["ageId"] = filters.AgeIds
 	}
 	
 	rows, err := r.db.Query(c, sql, params)

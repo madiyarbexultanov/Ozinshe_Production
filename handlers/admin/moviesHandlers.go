@@ -94,9 +94,10 @@ func (h *MoviesHandler) FindAll(c *gin.Context) {
 	logger := logger.GetLogger()
 
 	filters := models.Moviesfilters {
-		GenreIds: 	c.Query("genreids"),
-		CategoryIds: c.Query("categoryids"),
-		TypeIds: 	c.Query("typeids"),
+		GenreIds: 		c.Query("genreids"),
+		CategoryIds: 	c.Query("categoryids"),
+		TypeIds: 		c.Query("typeids"),
+		AgeIds: 		c.Query("ageids"),
 	}
 
 	movies, err := h.moviesRepo.FindAll(c, filters)

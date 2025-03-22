@@ -22,4 +22,5 @@ type Moviesfilters struct {
 	GenreIds	string
 	CategoryIds	string
 	TypeIds		string
+	AgeIds		string
 }

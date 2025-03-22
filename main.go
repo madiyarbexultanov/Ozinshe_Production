@@ -113,7 +113,7 @@ func main() {
 	searchHandler := admin.NewSearchHandler(searchRepository)
 	mediaHandler := admin.NewMediaHandler(mediaRepository)
 
-	HomepageHandler := public.NewHomepageHandler(homepageRepository)
+	HomepageHandler := public.NewHomepageHandler(homepageRepository, moviesRepository, genresRepository, categoriesRepository, agesRepository)
 
 	authHandler := public.NewAuthHandlers(usersRepository)
 	profilesHandler := public.NewProfilesHandler(usersRepository)
