@@ -933,6 +933,189 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/movies/{Id}/seasons": {
+            "post": {
+                "description": "Adds a new season with episodes to a movie",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "content"
+                ],
+                "summary": "Add seasons and episodes to a movie",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Movie ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Season and episodes data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.CreateSeasonRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Seasons and episodes added successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid movie id or payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.ApiError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ApiError"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/movies/{Id}/seasons/{seasonId}": {
+            "put": {
+                "description": "Updates an existing season's details and episodes",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "content"
+                ],
+                "summary": "Update season details",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Movie ID",
+                        "name": "Id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Season ID",
+                        "name": "seasonId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Season and episode update data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.UpdateSeasonRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Season and episodes updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid movie Id or seasonId or payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.ApiError"
+                        }
+                    },
+                    "404": {
+                        "description": "Season not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.ApiError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ApiError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Removes a season and its episodes from a movie",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "content"
+                ],
+                "summary": "Delete a season from a movie",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Movie ID",
+                        "name": "Id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Season ID",
+                        "name": "seasonId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Season deleted successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid movie id or seasonId",
+                        "schema": {
+                            "$ref": "#/definitions/models.ApiError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ApiError"
+                        }
+                    }
+                }
+            }
+        },
         "/admin/movies/{id}": {
             "get": {
                 "description": "Get a movie by its ID",
@@ -1088,76 +1271,39 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/movies/{movieId}/media": {
-            "patch": {
-                "description": "Upload cover and screenshots for a movie",
+        "/admin/recommendations": {
+            "get": {
+                "description": "Retrieve all recommended movies ordered by their position",
                 "consumes": [
-                    "multipart/form-data"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Movies"
+                    "recommendations"
                 ],
-                "summary": "Add media (cover, screenshots)",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Movie ID",
-                        "name": "movieId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "file",
-                        "description": "Cover image",
-                        "name": "cover",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "file",
-                        "description": "Screenshots",
-                        "name": "screenshots",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
+                "summary": "Get all recommendations",
                 "responses": {
                     "200": {
-                        "description": "Media added successfully",
+                        "description": "List of recommended movies",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.RecommendedMovie"
                             }
                         }
                     },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.ApiError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/models.ApiError"
-                        }
-                    },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/models.ApiError"
                         }
                     }
                 }
-            }
-        },
-        "/admin/movies/{movieId}/seasons": {
+            },
             "post": {
-                "description": "Adds a new season with episodes to a movie",
+                "description": "Add a new movie to recommendations with a specified position",
                 "consumes": [
                     "application/json"
                 ],
@@ -1165,41 +1311,32 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "content"
+                    "recommendations"
                 ],
-                "summary": "Add seasons and episodes to a movie",
+                "summary": "Create a new recommendation",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Movie ID",
-                        "name": "movieId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Season and episodes data",
-                        "name": "request",
+                        "description": "Recommendation Information",
+                        "name": "recommendation",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/admin.CreateSeasonRequest"
+                            "$ref": "#/definitions/admin.createRecommendationRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Seasons and episodes added successfully",
+                    "201": {
+                        "description": "Id of the created recommendation",
                         "schema": {
                             "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string"
-                                }
+                            "additionalProperties": {
+                                "type": "integer"
                             }
                         }
                     },
                     "400": {
-                        "description": "Invalid movieId or payload",
+                        "description": "Invalid request format",
                         "schema": {
                             "$ref": "#/definitions/models.ApiError"
                         }
@@ -1213,9 +1350,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/movies/{movieId}/seasons/{seasonId}": {
-            "put": {
-                "description": "Updates an existing season's details and episodes",
+        "/admin/recommendations/{id}": {
+            "get": {
+                "description": "Retrieve a recommendation by its Id",
                 "consumes": [
                     "application/json"
                 ],
@@ -1223,54 +1360,33 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "content"
+                    "recommendations"
                 ],
-                "summary": "Update season details",
+                "summary": "Get recommendation by Id",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Movie ID",
-                        "name": "movieId",
+                        "description": "Recommendation Id",
+                        "name": "id",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Season ID",
-                        "name": "seasonId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Season and episode update data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/admin.UpdateSeasonRequest"
-                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Season and episodes updated successfully",
+                        "description": "Recommended movie found",
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/models.RecommendedMovie"
                         }
                     },
                     "400": {
-                        "description": "Invalid movieId or seasonId or payload",
+                        "description": "Invalid recommendation Id",
                         "schema": {
                             "$ref": "#/definitions/models.ApiError"
                         }
                     },
                     "404": {
-                        "description": "Season not found",
+                        "description": "Recommendation not found",
                         "schema": {
                             "$ref": "#/definitions/models.ApiError"
                         }
@@ -1284,7 +1400,7 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Removes a season and its episodes from a movie",
+                "description": "Remove a recommendation by its Id",
                 "consumes": [
                     "application/json"
                 ],
@@ -1292,39 +1408,30 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "content"
+                    "recommendations"
                 ],
-                "summary": "Delete a season from a movie",
+                "summary": "Delete a recommendation",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Movie ID",
-                        "name": "movieId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Season ID",
-                        "name": "seasonId",
+                        "description": "Recommendation Id",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Season deleted successfully",
+                        "description": "Recommendation deleted successfully",
                         "schema": {
                             "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string"
-                                }
+                            "additionalProperties": {
+                                "type": "string"
                             }
                         }
                     },
                     "400": {
-                        "description": "Invalid movieId or seasonId",
+                        "description": "Invalid recommendation Id",
                         "schema": {
                             "$ref": "#/definitions/models.ApiError"
                         }
@@ -1553,6 +1660,53 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ApiError"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/search": {
+            "get": {
+                "description": "Retrieve movies, users, and categories based on the search query",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "search"
+                ],
+                "summary": "Search for movies, users, and categories",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "q",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of search results",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/repositories.SearchResult"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid search query",
+                        "schema": {
+                            "$ref": "#/definitions/models.ApiError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error during search",
                         "schema": {
                             "$ref": "#/definitions/models.ApiError"
                         }
@@ -2017,6 +2171,35 @@ const docTemplate = `{
                 }
             }
         },
+        "/homepage": {
+            "get": {
+                "description": "Retrieves the main screen data, including recommended movies, categories, genres, and age ratings",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "homepage"
+                ],
+                "summary": "Get Main Screen Data",
+                "responses": {
+                    "200": {
+                        "description": "Main screen data including recommended movies, categories, genres, and ages",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error: failed to load data",
+                        "schema": {
+                            "$ref": "#/definitions/models.ApiError"
+                        }
+                    }
+                }
+            }
+        },
         "/public/profile/changepassword/{id}": {
             "put": {
                 "description": "Allows a user to change their password",
@@ -2056,7 +2239,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid input data",
                         "schema": {
                             "$ref": "#/definitions/models.ApiError"
                         }
@@ -2068,7 +2251,7 @@ const docTemplate = `{
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/models.ApiError"
                         }
@@ -2106,13 +2289,13 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid user id",
                         "schema": {
                             "$ref": "#/definitions/models.ApiError"
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "User not found",
                         "schema": {
                             "$ref": "#/definitions/models.ApiError"
                         }
@@ -2157,13 +2340,261 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid input data",
                         "schema": {
                             "$ref": "#/definitions/models.ApiError"
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.ApiError"
+                        }
+                    }
+                }
+            }
+        },
+        "/search": {
+            "get": {
+                "description": "Searches for movies based on a query string",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "homepage"
+                ],
+                "summary": "Search Movies",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "query",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Search results with matching movies",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request: empty search query",
+                        "schema": {
+                            "$ref": "#/definitions/models.ApiError"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error: failed to search movies",
+                        "schema": {
+                            "$ref": "#/definitions/models.ApiError"
+                        }
+                    }
+                }
+            }
+        },
+        "/search/{category_id}": {
+            "get": {
+                "description": "Retrieves movies based on the provided category ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "homepage"
+                ],
+                "summary": "Get Movies by Category",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Category ID",
+                        "name": "category_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Movies belonging to the specified category",
+                        "schema": {
+                            "$ref": "#/definitions/gin.H"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request: category ID is required",
+                        "schema": {
+                            "$ref": "#/definitions/models.ApiError"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error: failed to load movies for category",
+                        "schema": {
+                            "$ref": "#/definitions/models.ApiError"
+                        }
+                    }
+                }
+            }
+        },
+        "/watchlist": {
+            "get": {
+                "description": "Retrieves the list of movies in the user's watchlist",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "watchlist"
+                ],
+                "summary": "Get user's watchlist",
+                "responses": {
+                    "200": {
+                        "description": "List of movies in the watchlist",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Movie"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to get watchlist",
+                        "schema": {
+                            "$ref": "#/definitions/models.ApiError"
+                        }
+                    }
+                }
+            }
+        },
+        "/watchlist/{movie_id}": {
+            "get": {
+                "description": "Checks if a movie is in the user's watchlist",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "watchlist"
+                ],
+                "summary": "Check if movie is in watchlist",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Movie ID to check",
+                        "name": "movie_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success status (true if movie is in watchlist)",
+                        "schema": {
+                            "$ref": "#/definitions/public.watchlistResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid movie ID",
+                        "schema": {
+                            "$ref": "#/definitions/models.ApiError"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to check watchlist",
+                        "schema": {
+                            "$ref": "#/definitions/models.ApiError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Adds a movie to the user's watchlist",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "watchlist"
+                ],
+                "summary": "Add movie to watchlist",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Movie ID to add",
+                        "name": "movie_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Movie successfully added to the watchlist",
+                        "schema": {
+                            "$ref": "#/definitions/public.watchlistResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid movie ID",
+                        "schema": {
+                            "$ref": "#/definitions/models.ApiError"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to add to watchlist",
+                        "schema": {
+                            "$ref": "#/definitions/models.ApiError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Removes a movie from the user's watchlist",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "watchlist"
+                ],
+                "summary": "Remove movie from watchlist",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Movie ID to remove",
+                        "name": "movie_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Movie successfully removed from the watchlist",
+                        "schema": {
+                            "$ref": "#/definitions/public.watchlistResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid movie ID",
+                        "schema": {
+                            "$ref": "#/definitions/models.ApiError"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to remove from watchlist",
                         "schema": {
                             "$ref": "#/definitions/models.ApiError"
                         }
@@ -2207,7 +2638,7 @@ const docTemplate = `{
                         "$ref": "#/definitions/admin.CreateEpisodeRequest"
                     }
                 },
-                "movieId": {
+                "id": {
                     "type": "integer"
                 },
                 "number": {
@@ -2323,6 +2754,17 @@ const docTemplate = `{
                 }
             }
         },
+        "admin.createRecommendationRequest": {
+            "type": "object",
+            "properties": {
+                "movie_id": {
+                    "type": "integer"
+                },
+                "position": {
+                    "type": "integer"
+                }
+            }
+        },
         "admin.createRoleRequest": {
             "type": "object",
             "required": [
@@ -2410,15 +2852,12 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "number": {
-                    "description": "Номер серии",
                     "type": "integer"
                 },
                 "seasonID": {
-                    "description": "ID сезона, к которому относится эпизод",
                     "type": "integer"
                 },
                 "videoURL": {
-                    "description": "Ссылка на видео",
                     "type": "string"
                 }
             }
@@ -2452,9 +2891,6 @@ const docTemplate = `{
                         "$ref": "#/definitions/models.Category"
                     }
                 },
-                "cover": {
-                    "type": "string"
-                },
                 "description": {
                     "type": "string"
                 },
@@ -2476,6 +2912,9 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "media": {
+                    "$ref": "#/definitions/models.MovieMedia"
+                },
                 "movieType": {
                     "type": "string"
                 },
@@ -2491,12 +2930,6 @@ const docTemplate = `{
                 "runtime": {
                     "type": "integer"
                 },
-                "screenshots": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
                 "seasons": {
                     "type": "array",
                     "items": {
@@ -2508,6 +2941,20 @@ const docTemplate = `{
                 }
             }
         },
+        "models.MovieMedia": {
+            "type": "object",
+            "properties": {
+                "cover": {
+                    "type": "string"
+                },
+                "screenshots": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "models.MovieType": {
             "type": "object",
             "properties": {
@@ -2516,6 +2963,20 @@ const docTemplate = `{
                 },
                 "title": {
                     "type": "string"
+                }
+            }
+        },
+        "models.RecommendedMovie": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "movieID": {
+                    "type": "integer"
+                },
+                "position": {
+                    "type": "integer"
                 }
             }
         },
@@ -2690,6 +3151,40 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "phone_number": {
+                    "type": "string"
+                }
+            }
+        },
+        "public.watchlistResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "repositories.SearchResult": {
+            "type": "object",
+            "properties": {
+                "entity": {
+                    "description": "Данные объекта (пользователь, категория, фильм)"
+                },
+                "id": {
+                    "description": "ID объекта",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "Тип объекта (User, Category, Movie)",
+                    "type": "string"
+                },
+                "url": {
+                    "description": "URL для перехода на объект",
                     "type": "string"
                 }
             }

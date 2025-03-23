@@ -22,7 +22,7 @@ definitions:
         items:
           $ref: '#/definitions/admin.CreateEpisodeRequest'
         type: array
-      movieId:
+      id:
         type: integer
       number:
         type: integer
@@ -97,6 +97,13 @@ definitions:
       name:
         type: string
     type: object
+  admin.createRecommendationRequest:
+    properties:
+      movie_id:
+        type: integer
+      position:
+        type: integer
+    type: object
   admin.createRoleRequest:
     properties:
       can_edit_ages:
@@ -154,13 +161,10 @@ definitions:
       id:
         type: integer
       number:
-        description: Номер серии
         type: integer
       seasonID:
-        description: ID сезона, к которому относится эпизод
         type: integer
       videoURL:
-        description: Ссылка на видео
         type: string
     type: object
   models.Genre:
@@ -182,8 +186,6 @@ definitions:
         items:
           $ref: '#/definitions/models.Category'
         type: array
-      cover:
-        type: string
       description:
         type: string
       director:
@@ -198,6 +200,8 @@ definitions:
         items:
           type: string
         type: array
+      media:
+        $ref: '#/definitions/models.MovieMedia'
       movieType:
         type: string
       movieTypeId:
@@ -208,10 +212,6 @@ definitions:
         type: integer
       runtime:
         type: integer
-      screenshots:
-        items:
-          type: string
-        type: array
       seasons:
         items:
           $ref: '#/definitions/models.Season'
@@ -219,12 +219,30 @@ definitions:
       title:
         type: string
     type: object
+  models.MovieMedia:
+    properties:
+      cover:
+        type: string
+      screenshots:
+        items:
+          type: string
+        type: array
+    type: object
   models.MovieType:
     properties:
       id:
         type: integer
       title:
         type: string
+    type: object
+  models.RecommendedMovie:
+    properties:
+      id:
+        type: integer
+      movieID:
+        type: integer
+      position:
+        type: integer
     type: object
   models.Role:
     properties:
@@ -341,6 +359,29 @@ definitions:
       name:
         type: string
       phone_number:
+        type: string
+    type: object
+  public.watchlistResponse:
+    properties:
+      error:
+        type: string
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  repositories.SearchResult:
+    properties:
+      entity:
+        description: Данные объекта (пользователь, категория, фильм)
+      id:
+        description: ID объекта
+        type: integer
+      type:
+        description: Тип объекта (User, Category, Movie)
+        type: string
+      url:
+        description: URL для перехода на объект
         type: string
     type: object
   textproto.MIMEHeader:
@@ -965,6 +1006,127 @@ paths:
       summary: Create a new movie
       tags:
       - Movies
+  /admin/movies/{Id}/seasons:
+    post:
+      consumes:
+      - application/json
+      description: Adds a new season with episodes to a movie
+      parameters:
+      - description: Movie ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Season and episodes data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/admin.CreateSeasonRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Seasons and episodes added successfully
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Invalid movie id or payload
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Add seasons and episodes to a movie
+      tags:
+      - content
+  /admin/movies/{Id}/seasons/{seasonId}:
+    delete:
+      consumes:
+      - application/json
+      description: Removes a season and its episodes from a movie
+      parameters:
+      - description: Movie ID
+        in: path
+        name: Id
+        required: true
+        type: integer
+      - description: Season ID
+        in: path
+        name: seasonId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Season deleted successfully
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Invalid movie id or seasonId
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Delete a season from a movie
+      tags:
+      - content
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing season's details and episodes
+      parameters:
+      - description: Movie ID
+        in: path
+        name: Id
+        required: true
+        type: integer
+      - description: Season ID
+        in: path
+        name: seasonId
+        required: true
+        type: integer
+      - description: Season and episode update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/admin.UpdateSeasonRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Season and episodes updated successfully
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Invalid movie Id or seasonId or payload
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "404":
+          description: Season not found
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Update season details
+      tags:
+      - content
   /admin/movies/{id}:
     delete:
       consumes:
@@ -1068,172 +1230,121 @@ paths:
       summary: Update movie
       tags:
       - Movies
-  /admin/movies/{movieId}/media:
-    patch:
+  /admin/recommendations:
+    get:
       consumes:
-      - multipart/form-data
-      description: Upload cover and screenshots for a movie
-      parameters:
-      - description: Movie ID
-        in: path
-        name: movieId
-        required: true
-        type: integer
-      - description: Cover image
-        in: formData
-        name: cover
-        required: true
-        type: file
-      - description: Screenshots
-        in: formData
-        name: screenshots
-        required: true
-        type: file
+      - application/json
+      description: Retrieve all recommended movies ordered by their position
       produces:
       - application/json
       responses:
         "200":
-          description: Media added successfully
+          description: List of recommended movies
+          schema:
+            items:
+              $ref: '#/definitions/models.RecommendedMovie'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Get all recommendations
+      tags:
+      - recommendations
+    post:
+      consumes:
+      - application/json
+      description: Add a new movie to recommendations with a specified position
+      parameters:
+      - description: Recommendation Information
+        in: body
+        name: recommendation
+        required: true
+        schema:
+          $ref: '#/definitions/admin.createRecommendationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Id of the created recommendation
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+        "400":
+          description: Invalid request format
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Create a new recommendation
+      tags:
+      - recommendations
+  /admin/recommendations/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a recommendation by its Id
+      parameters:
+      - description: Recommendation Id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Recommendation deleted successfully
           schema:
             additionalProperties:
               type: string
             type: object
         "400":
-          description: Bad Request
+          description: Invalid recommendation Id
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Delete a recommendation
+      tags:
+      - recommendations
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a recommendation by its Id
+      parameters:
+      - description: Recommendation Id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Recommended movie found
+          schema:
+            $ref: '#/definitions/models.RecommendedMovie'
+        "400":
+          description: Invalid recommendation Id
           schema:
             $ref: '#/definitions/models.ApiError'
         "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/models.ApiError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/models.ApiError'
-      summary: Add media (cover, screenshots)
-      tags:
-      - Movies
-  /admin/movies/{movieId}/seasons:
-    post:
-      consumes:
-      - application/json
-      description: Adds a new season with episodes to a movie
-      parameters:
-      - description: Movie ID
-        in: path
-        name: movieId
-        required: true
-        type: integer
-      - description: Season and episodes data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/admin.CreateSeasonRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Seasons and episodes added successfully
-          schema:
-            properties:
-              message:
-                type: string
-            type: object
-        "400":
-          description: Invalid movieId or payload
+          description: Recommendation not found
           schema:
             $ref: '#/definitions/models.ApiError'
         "500":
           description: Internal server error
           schema:
             $ref: '#/definitions/models.ApiError'
-      summary: Add seasons and episodes to a movie
+      summary: Get recommendation by Id
       tags:
-      - content
-  /admin/movies/{movieId}/seasons/{seasonId}:
-    delete:
-      consumes:
-      - application/json
-      description: Removes a season and its episodes from a movie
-      parameters:
-      - description: Movie ID
-        in: path
-        name: movieId
-        required: true
-        type: integer
-      - description: Season ID
-        in: path
-        name: seasonId
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Season deleted successfully
-          schema:
-            properties:
-              message:
-                type: string
-            type: object
-        "400":
-          description: Invalid movieId or seasonId
-          schema:
-            $ref: '#/definitions/models.ApiError'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/models.ApiError'
-      summary: Delete a season from a movie
-      tags:
-      - content
-    put:
-      consumes:
-      - application/json
-      description: Updates an existing season's details and episodes
-      parameters:
-      - description: Movie ID
-        in: path
-        name: movieId
-        required: true
-        type: integer
-      - description: Season ID
-        in: path
-        name: seasonId
-        required: true
-        type: integer
-      - description: Season and episode update data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/admin.UpdateSeasonRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Season and episodes updated successfully
-          schema:
-            properties:
-              message:
-                type: string
-            type: object
-        "400":
-          description: Invalid movieId or seasonId or payload
-          schema:
-            $ref: '#/definitions/models.ApiError'
-        "404":
-          description: Season not found
-          schema:
-            $ref: '#/definitions/models.ApiError'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/models.ApiError'
-      summary: Update season details
-      tags:
-      - content
+      - recommendations
   /admin/roles:
     get:
       description: Get a list of all roles
@@ -1381,6 +1492,37 @@ paths:
       summary: Update an existing role
       tags:
       - Roles
+  /admin/search:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve movies, users, and categories based on the search query
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of search results
+          schema:
+            items:
+              $ref: '#/definitions/repositories.SearchResult'
+            type: array
+        "400":
+          description: Invalid search query
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Error during search
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Search for movies, users, and categories
+      tags:
+      - search
   /admin/seasons/{seasonId}/episodes/{episodeId}:
     delete:
       consumes:
@@ -1683,6 +1825,27 @@ paths:
       summary: Get all categories
       tags:
       - categories
+  /homepage:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the main screen data, including recommended movies, categories,
+        genres, and age ratings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Main screen data including recommended movies, categories,
+            genres, and ages
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: 'Server error: failed to load data'
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Get Main Screen Data
+      tags:
+      - homepage
   /public/profile/{id}:
     get:
       consumes:
@@ -1702,11 +1865,11 @@ paths:
           schema:
             $ref: '#/definitions/public.profileResponse'
         "400":
-          description: Bad Request
+          description: Invalid user id
           schema:
             $ref: '#/definitions/models.ApiError'
         "404":
-          description: Not Found
+          description: User not found
           schema:
             $ref: '#/definitions/models.ApiError'
       summary: Get user profile
@@ -1736,11 +1899,11 @@ paths:
           schema:
             type: string
         "400":
-          description: Bad Request
+          description: Invalid input data
           schema:
             $ref: '#/definitions/models.ApiError'
         "404":
-          description: Not Found
+          description: User not found
           schema:
             $ref: '#/definitions/models.ApiError'
       summary: Update user profile
@@ -1771,7 +1934,7 @@ paths:
           schema:
             type: string
         "400":
-          description: Bad Request
+          description: Invalid input data
           schema:
             $ref: '#/definitions/models.ApiError'
         "401":
@@ -1779,12 +1942,176 @@ paths:
           schema:
             $ref: '#/definitions/models.ApiError'
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
             $ref: '#/definitions/models.ApiError'
       summary: Change user password
       tags:
       - Public Profile
+  /search:
+    get:
+      consumes:
+      - application/json
+      description: Searches for movies based on a query string
+      parameters:
+      - description: Search query
+        in: query
+        name: query
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Search results with matching movies
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: 'Bad request: empty search query'
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: 'Server error: failed to search movies'
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Search Movies
+      tags:
+      - homepage
+  /search/{category_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves movies based on the provided category ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: category_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Movies belonging to the specified category
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: 'Bad request: category ID is required'
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: 'Server error: failed to load movies for category'
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Get Movies by Category
+      tags:
+      - homepage
+  /watchlist:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the list of movies in the user's watchlist
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of movies in the watchlist
+          schema:
+            items:
+              $ref: '#/definitions/models.Movie'
+            type: array
+        "500":
+          description: Failed to get watchlist
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Get user's watchlist
+      tags:
+      - watchlist
+  /watchlist/{movie_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Removes a movie from the user's watchlist
+      parameters:
+      - description: Movie ID to remove
+        in: path
+        name: movie_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Movie successfully removed from the watchlist
+          schema:
+            $ref: '#/definitions/public.watchlistResponse'
+        "400":
+          description: Invalid movie ID
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Failed to remove from watchlist
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Remove movie from watchlist
+      tags:
+      - watchlist
+    get:
+      consumes:
+      - application/json
+      description: Checks if a movie is in the user's watchlist
+      parameters:
+      - description: Movie ID to check
+        in: path
+        name: movie_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success status (true if movie is in watchlist)
+          schema:
+            $ref: '#/definitions/public.watchlistResponse'
+        "400":
+          description: Invalid movie ID
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Failed to check watchlist
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Check if movie is in watchlist
+      tags:
+      - watchlist
+    post:
+      consumes:
+      - application/json
+      description: Adds a movie to the user's watchlist
+      parameters:
+      - description: Movie ID to add
+        in: path
+        name: movie_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Movie successfully added to the watchlist
+          schema:
+            $ref: '#/definitions/public.watchlistResponse'
+        "400":
+          description: Invalid movie ID
+          schema:
+            $ref: '#/definitions/models.ApiError'
+        "500":
+          description: Failed to add to watchlist
+          schema:
+            $ref: '#/definitions/models.ApiError'
+      summary: Add movie to watchlist
+      tags:
+      - watchlist
 securityDefinitions:
   Bearer:
     description: Type "Bearer" followed by a space and JWT token.

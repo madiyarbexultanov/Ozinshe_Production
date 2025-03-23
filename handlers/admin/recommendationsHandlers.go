@@ -25,14 +25,14 @@ type createRecommendationRequest struct {
 }
 
 // FindAll godoc
-// @Summary Get all recommendations
-// @Description Retrieve all recommended movies
-// @Tags recommendations
-// @Accept json
-// @Produce json
-// @Success 200 {array} models.Recommendation
-// @Failure 500 {object} models.ApiError
-// @Router /admin/recommendations [get]
+// @Summary      Get all recommendations
+// @Description  Retrieve all recommended movies ordered by their position
+// @Tags         recommendations
+// @Accept       json
+// @Produce      json
+// @Success      200 {array} models.RecommendedMovie "List of recommended movies"
+// @Failure      500 {object} models.ApiError "Internal server error"
+// @Router       /admin/recommendations [get]
 func (h *RecommendationsHandler) FindAll(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -48,16 +48,17 @@ func (h *RecommendationsHandler) FindAll(c *gin.Context) {
 }
 
 // FindById godoc
-// @Summary Get recommendation by Id
-// @Description Retrieve a recommendation by its Id
-// @Tags recommendations
-// @Accept json
-// @Produce json
-// @Param id path int true "Recommendation Id"
-// @Success 200 {object} models.Recommendation
-// @Failure 400 {object} models.ApiError
-// @Failure 404 {object} models.ApiError
-// @Router /admin/recommendations/{id} [get]
+// @Summary      Get recommendation by Id
+// @Description  Retrieve a recommendation by its Id
+// @Tags         recommendations
+// @Accept       json
+// @Produce      json
+// @Param        id path int true "Recommendation Id"
+// @Success      200 {object} models.RecommendedMovie "Recommended movie found"
+// @Failure      400 {object} models.ApiError "Invalid recommendation Id"
+// @Failure      404 {object} models.ApiError "Recommendation not found"
+// @Failure      500 {object} models.ApiError "Internal server error"
+// @Router       /admin/recommendations/{id} [get]
 func (h *RecommendationsHandler) FindById(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -80,16 +81,16 @@ func (h *RecommendationsHandler) FindById(c *gin.Context) {
 }
 
 // Create godoc
-// @Summary Create a new recommendation
-// @Description Add a new movie to recommendations
-// @Tags recommendations
-// @Accept json
-// @Produce json
-// @Param recommendation body createRecommendationRequest true "Recommendation Information"
-// @Success 201 {object} map[string]int "Id of the created recommendation"
-// @Failure 400 {object} models.ApiError
-// @Failure 500 {object} models.ApiError
-// @Router /admin/recommendations [post]
+// @Summary      Create a new recommendation
+// @Description  Add a new movie to recommendations with a specified position
+// @Tags         recommendations
+// @Accept       json
+// @Produce      json
+// @Param        recommendation body createRecommendationRequest true "Recommendation Information"
+// @Success      201 {object} map[string]int "Id of the created recommendation"
+// @Failure      400 {object} models.ApiError "Invalid request format"
+// @Failure      500 {object} models.ApiError "Internal server error"
+// @Router       /admin/recommendations [post]
 func (h *RecommendationsHandler) Create(c *gin.Context) {
 	logger := logger.GetLogger()
 
@@ -112,16 +113,16 @@ func (h *RecommendationsHandler) Create(c *gin.Context) {
 }
 
 // Delete godoc
-// @Summary Delete a recommendation
-// @Description Remove a recommendation by Id
-// @Tags recommendations
-// @Accept json
-// @Produce json
-// @Param id path int true "Recommendation Id"
-// @Success 200 {object} map[string]string "Recommendation deleted successfully"
-// @Failure 400 {object} models.ApiError
-// @Failure 500 {object} models.ApiError
-// @Router /admin/recommendations/{id} [delete]
+// @Summary      Delete a recommendation
+// @Description  Remove a recommendation by its Id
+// @Tags         recommendations
+// @Accept       json
+// @Produce      json
+// @Param        id path int true "Recommendation Id"
+// @Success      200 {object} map[string]string "Recommendation deleted successfully"
+// @Failure      400 {object} models.ApiError "Invalid recommendation Id"
+// @Failure      500 {object} models.ApiError "Internal server error"
+// @Router       /admin/recommendations/{id} [delete]
 func (h *RecommendationsHandler) Delete(c *gin.Context) {
 	logger := logger.GetLogger()
 

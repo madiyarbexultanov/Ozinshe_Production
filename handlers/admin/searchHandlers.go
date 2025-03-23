@@ -21,16 +21,16 @@ func NewSearchHandler(searchRepo *repositories.SearchRepository) *SearchHandler 
 
 
 // SearchAll godoc
-// @Summary Search for movies
-// @Description Retrieve movies based on the search query
+// @Summary Search for movies, users, and categories
+// @Description Retrieve movies, users, and categories based on the search query
 // @Tags search
 // @Accept json
 // @Produce json
 // @Param q query string true "Search query"
-// @Success 200 {array}  SearchResult
+// @Success 200 {array} repositories.SearchResult "List of search results"
 // @Failure 400 {object} models.ApiError "Invalid search query"
 // @Failure 500 {object} models.ApiError "Error during search"
-// @Router /search [get]
+// @Router /admin/search [get]
 func (h *SearchHandler) SearchAll(c *gin.Context) {
     logger := logger.GetLogger()
 
