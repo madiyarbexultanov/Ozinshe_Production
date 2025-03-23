@@ -100,6 +100,7 @@ func main() {
 	mediaRepository := repositories.NewMediaRepository(conn)
 
 	homepageRepository := repositories.NewHomepageRepository(conn)
+	watchlistRepository := repositories.NewWatchlistRepository(conn)
 
 	moviesHandler := admin.NewMoviesHandler(moviesRepository, movieTypesRepository, genresRepository,  agesRepository, categoriesRepository)
 	recommendationsHandler := admin.NewRecommendationsHandler(recommendationsRepository)
@@ -117,16 +118,24 @@ func main() {
 
 	authHandler := public.NewAuthHandlers(usersRepository)
 	profilesHandler := public.NewProfilesHandler(usersRepository)
+	watchlistHandler := public.NewWatchlistHandler(watchlistRepository)
 	googleAuthHandler := public.NewAuthHandlers(usersRepository)
 
 	authorized := r.Group("")
 	authorized.Use(middlewares.AuthMiddleware)
 
-	authorized.GET("/public/profile/:id", profilesHandler.UserProfile)
-	authorized.PUT("/public/profile/:id", profilesHandler.Update)
-	authorized.PUT("/public/profile/changepassword/:id", profilesHandler.ChangePassword)
+	authorized.GET("/profile/:id", profilesHandler.UserProfile)
+	authorized.PUT("/profile/:id", profilesHandler.Update)
+	authorized.PUT("/profile/changepassword/:id", profilesHandler.ChangePassword)
 
-	authorized.GET("/public/homepage", HomepageHandler.GetMainScreen)
+	authorized.GET("/homepage", HomepageHandler.GetMainScreen)
+	authorized.GET("/search", HomepageHandler.SearchMovies)
+	authorized.GET("/search/:category_id", HomepageHandler.GetMoviesByCategory)
+
+	authorized.POST("/watchlist/:movie_id", watchlistHandler.AddToWatchlist)
+	authorized.GET("/watchlist", watchlistHandler.GetWatchlist)
+	authorized.DELETE("/watchlist/:movie_id", watchlistHandler.RemoveFromWatchlist)
+	authorized.GET("/watchlist/:movie_id", watchlistHandler.IsInWatchlist)
 
 	authorized.POST("/public/auth/signOut", authHandler.SignOut)
 
@@ -241,11 +250,11 @@ func main() {
 	
 
 	unauthorized := r.Group("")
-	unauthorized.POST("/public/auth/signUp", authHandler.SignUp)
-	unauthorized.POST("/public/auth/signIn", authHandler.SignIn)
+	unauthorized.POST("/auth/signUp", authHandler.SignUp)
+	unauthorized.POST("/auth/signIn", authHandler.SignIn)
 
-	unauthorized.GET("/public/auth/google", googleAuthHandler.GoogleLogin)
-	unauthorized.GET("/public/auth/google/callback", authHandler.GoogleCallback)
+	unauthorized.GET("/auth/google", googleAuthHandler.GoogleLogin)
+	unauthorized.GET("/auth/google/callback", authHandler.GoogleCallback)
 
 	docs.SwaggerInfo.BasePath = "/"
 	unauthorized.GET("/swagger/*any", swagger.WrapHandler(swaggerfiles.Handler))

@@ -409,33 +409,35 @@ func (r *MoviesRepository) Delete(c context.Context, movieID int) error {
 	return nil
 }
 
-// func (r *MoviesRepository) UpdateCoverAndScreenshots(c context.Context, movieID int, cover string, screenshots []string) error {
-// 	// Обновление Cover
-// 	_, err := r.db.Exec(c, `
-// 		UPDATE movies 
-// 		SET cover = $1 
-// 		WHERE id = $2
-// 	`, cover, movieID)
-// 	if err != nil {
-// 		return err
-// 	}
+func (r *MoviesRepository) SearchMovies(c context.Context, query string) ([]models.Movie, error) {
+	rows, err := r.db.Query(c, `
+        SELECT id, title, release_year, runtime, 
+               keywords, description, director, 
+               producer, cover, screenshots, movie_type_id
+        FROM movies
+        WHERE title ILIKE '%' || $1 || '%'
+        ORDER BY release_year DESC
+    `, query)
 
-// 	// Обновление Screenshots (если они переданы)
-// 	if len(screenshots) > 0 {
-// 		// Для простоты, перезаписываем все screenshots
-// 		_, err := r.db.Exec(c, `
-// 			UPDATE movies 
-// 			SET screenshots = $1 
-// 			WHERE id = $2
-// 		`, screenshots, movieID)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-// 	return nil
-// }
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-
+	var movies []models.Movie
+	for rows.Next() {
+		var movie models.Movie
+		if err := rows.Scan(
+			&movie.Id, &movie.Title, &movie.ReleaseYear, &movie.Runtime,
+			&movie.KeyWords, &movie.Description, &movie.Director,
+			&movie.Producer, &movie.Media.Cover, &movie.Media.Screenshots, &movie.MovieTypeId,
+		); err != nil {
+			return nil, err
+		}
+		movies = append(movies, movie)
+	}
+	return movies, nil
+}
 
 func containsGenre(genres []models.Genre, g models.Genre) bool {
 	for _, genre := range genres {

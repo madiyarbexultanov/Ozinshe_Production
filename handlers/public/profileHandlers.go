@@ -49,8 +49,8 @@ type ResetPasswordRequest struct {
 // @Produce json
 // @Param id path int true "User ID"
 // @Success 200 {object} profileResponse
-// @Failure 400 {object} models.ApiError
-// @Failure 404 {object} models.ApiError
+// @Failure 400 {object} models.ApiError "Invalid user id"
+// @Failure 404 {object} models.ApiError "User not found"
 // @Router /public/profile/{id} [get]
 func (h *ProfilesHandler) UserProfile(c *gin.Context) {
 	logger := logger.GetLogger()
@@ -81,7 +81,7 @@ func (h *ProfilesHandler) UserProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// UpdateProfile godoc
+// Update godoc
 // @Summary Update user profile
 // @Description Updates the details of a user profile by ID
 // @Tags Public Profile
@@ -90,8 +90,8 @@ func (h *ProfilesHandler) UserProfile(c *gin.Context) {
 // @Param id path int true "User ID"
 // @Param body body updateRequest true "Update Profile Data"
 // @Success 200 {string} string "Profile updated successfully"
-// @Failure 400 {object} models.ApiError
-// @Failure 404 {object} models.ApiError
+// @Failure 400 {object} models.ApiError "Invalid input data"
+// @Failure 404 {object} models.ApiError "User not found"
 // @Router /public/profile/{id} [put]
 func (h *ProfilesHandler) Update(c *gin.Context) {
 	logger := logger.GetLogger()
@@ -155,9 +155,9 @@ func (h *ProfilesHandler) Update(c *gin.Context) {
 // @Param id path int true "User ID"
 // @Param body body ResetPasswordRequest true "Password Reset Data"
 // @Success 200 {string} string "Password changed successfully"
-// @Failure 400 {object} models.ApiError
-// @Failure 401 {object} models.ApiError
-// @Failure 500 {object} models.ApiError
+// @Failure 400 {object} models.ApiError "Invalid input data"
+// @Failure 401 {object} models.ApiError "Unauthorized"
+// @Failure 500 {object} models.ApiError "Internal server error"
 // @Router /public/profile/changepassword/{id} [put]
 func (h *ProfilesHandler) ChangePassword(c *gin.Context) {
 	logger := logger.GetLogger()
