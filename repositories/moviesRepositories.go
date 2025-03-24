@@ -79,6 +79,7 @@ func (r *MoviesRepository) FindById(c context.Context, id int) (models.Movie, er
 		}
 
 		movie.MovieType = mt.Title
+		movie.MovieTypeId = mt.Id
 
 		if g.Id != 0 {
 			genresMap[g.Id] = g
@@ -215,6 +216,7 @@ func (r *MoviesRepository) FindAll(c context.Context, filters models.Moviesfilte
 		existingMovie, exists := moviesMap[m.Id]
 		if !exists {
 			m.MovieType = mt.Title
+			m.MovieTypeId = mt.Id
 			moviesMap[m.Id] = &m
 			existingMovie = &m
 		}

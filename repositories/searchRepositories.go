@@ -46,7 +46,7 @@ func (r *SearchRepository) SearchAll(c context.Context, query string) ([]SearchR
 	var results []SearchResult
 
 	// Поиск пользователей
-	userQuery := `SELECT id, name, email FROM users WHERE LOWER(name) LIKE $1 OR LOWER(email) LIKE $1`
+	userQuery := `SELECT id, name, email FROM users WHERE name ILIKE $1 OR email ILIKE $1`
 	rows, err := r.db.Query(c, userQuery, "%"+query+"%")
 	if err != nil {
 		return nil, err
@@ -67,7 +67,7 @@ func (r *SearchRepository) SearchAll(c context.Context, query string) ([]SearchR
 	}
 
 	// Поиск категорий
-	categoryQuery := `SELECT id, title FROM categories WHERE LOWER(title) LIKE $1`
+	categoryQuery := `SELECT id, title FROM categories WHERE title ILIKE $1`
 	rows, err = r.db.Query(c, categoryQuery, "%"+query+"%")
 	if err != nil {
 		return nil, err
@@ -88,7 +88,7 @@ func (r *SearchRepository) SearchAll(c context.Context, query string) ([]SearchR
 	}
 
 	// Поиск фильмов
-	movieQuery := `SELECT id, title, cover FROM movies WHERE LOWER(title) LIKE $1 OR LOWER(description) LIKE $1 OR EXISTS (SELECT 1 FROM unnest(keywords) AS kw WHERE LOWER(kw) LIKE $1)`
+	movieQuery := `SELECT id, title, cover FROM movies WHERE title ILIKE $1 OR description ILIKE $1`
 	rows, err = r.db.Query(c, movieQuery, "%"+query+"%")
 	if err != nil {
 		return nil, err
